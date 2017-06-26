@@ -1,7 +1,5 @@
 public class Packet
 {
-    public static int packetSizeMax = 1460;
-
     // | --- HEADER ---------------------------------------|
     // |CRC            |Typ|            Packetnumber       |
     // | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10| 11| 12|
@@ -10,6 +8,9 @@ public class Packet
     private static byte packetNumLen = 8;
     public static int headerSize = crcLen + typLen + packetNumLen;
     //------------------------------------------------------
+
+    public static int packetSizeMax = 1024;
+    public static int payloadSizeMax = packetSizeMax - headerSize;
 
     private byte[] checksum;
     private byte typ;

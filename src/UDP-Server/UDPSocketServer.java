@@ -243,12 +243,11 @@ public class UDPSocketServer
 	{		
 		InetAddress clientHost = receivePacket.getAddress();
 		int clientPort = receivePacket.getPort();		
-		String antwort;
-		if(status==0)antwort="Packet_OK";
-		else if(status==1)antwort="Packet_FAIL";
-		else antwort="File_FAIL";
-		byte[] buf = antwort.getBytes();
-		DatagramPacket reply = new DatagramPacket(buf, buf.length, clientHost, clientPort);
+		byte[] response = new byte[1];
+		if(status==0)response[0] = (byte) 0x0;
+		else if(status==1)response[0] = (byte) 0x1;
+		else response[0] = (byte) 0x2;
+		DatagramPacket reply = new DatagramPacket(response, response.length, clientHost, clientPort);
 		serverSocket.send(reply);
 		//System.out.println("Request verschickt");
 	}

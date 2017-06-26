@@ -19,43 +19,44 @@ public class UDPClient
     private static byte[] bytePacket;
     private static byte[] bytePayload;
 
+    private static Output output;
     private static Statistic statistic;
+
 
     public static void main(String[] args) throws Exception
     {
         if (args.length != 3) 
         {
-            System.out.println("Usage: program <filepath/file> <hostaddress> <hostport>");
+            output.printStr("Usage: program <filepath/file> <hostaddress> <hostport>\n");
             return;
         }
     
         setup(args[0], args[1], args[2]);
 
-        //--- Informationsausgabe ------------
-        System.out.println("Server: " + args[1]);
-        System.out.println("Port: " + args[2]);
-        System.out.println("File length: " + (file.length()/1000) + " KiByte");
-        System.out.println("Packet count: "+ packetCount);
-        //------------------------------------
+        output.printStr(
+        	"Server: " + args[1]
+        	+ "\nPort: " + args[2]
+        	+ "\nFile length: " + (file.length()/1000) + " KiByte"
+        	+ "\nPacket count: "+ packetCount +"\n");
         
         //-----First Packet ----------------------------------------------------------------------------
         packet = new Packet();
         packet.setHeader((byte)0x0, packetCount);
-        byte[] fileCRC = getFileChecksum();
+        byte[] fileCRC = checksum();
         byte[] fileName = args[0].getBytes();
         bytePayload = new byte[fileCRC.length + fileName.length];
         for(int i=0; i<fileCRC.length; i++) bytePayload[i] = fileCRC[i];
         for(int i=0; i<fileName.length; i++) bytePayload[fileCRC.length+i] = fileName[i];
         packet.setPayload(bytePayload);
         bytePacket = packet.genPacket();
-
         send(bytePacket);
         //----------------------------------------------------------------------------------------------
         
+        statistic = new Statistic(output);
         statistic.start();
         
         //----------Informationsdaten-------------------------------------------------------------------
-        bytePayload = new byte[Packet.packetSizeMax - Packet.headerSize];
+        bytePayload = new byte[Packet.payloadSizeMax];
         fileInput = new FileInputStream(file);
         int restLen;
         while ((restLen = (fileInput.read(bytePayload, 0, bytePayload.length))) != -1) 
@@ -67,7 +68,6 @@ public class UDPClient
             packet.setHeader((byte)0x1, packetNum);
             packet.setPayload(bytePayload);
             bytePacket = packet.genPacket();
-
             send(bytePacket);
         }
         fileInput.close();
@@ -80,30 +80,25 @@ public class UDPClient
         for(int i=0; i<rest.length; i++) rest[i] = bytePayload[i];
         packet.setPayload(rest);
         bytePacket = packet.genPacket();
-
         send(bytePacket);
         //----------------------------------------------------------------------------------------------
         
         cleanup();
     }
 
-    public static void setup(String file, String addr, String port)
+    public static void setup(String file, String addr, String port) throws Exception
     {
-        try {
-            clientSocket = new DatagramSocket();
-            UDPClient.file = new File(file);
-            UDPClient.addr = InetAddress.getByName(addr);
-            UDPClient.port = Integer.parseInt(port);
-        } catch(Exception e){}
+        clientSocket = new DatagramSocket();
+        clientSocket.setSoTimeout(250);
+        UDPClient.file = new File(file);
+        UDPClient.addr = InetAddress.getByName(addr);
+        UDPClient.port = Integer.parseInt(port);
 
         packetNum = 0;
-        packetCount = (long)(UDPClient.file.length() / (Packet.packetSizeMax - Packet.headerSize) + 1);
-
-        statistic = new Statistic();
-        Statistic.startZeit = System.currentTimeMillis();
+        packetCount = (long)(UDPClient.file.length() / Packet.payloadSizeMax + 1);
     }
 
-    private static byte[] getFileChecksum() throws Exception
+    private static byte[] checksum() throws Exception
     {
         CRC16 crc = new CRC16();
         byte[] buffer = new byte[4];
@@ -125,41 +120,43 @@ public class UDPClient
         clientSocket.close();
     }
 
-    public static void send(byte[] packet)
+    public static void send(byte[] packet) throws Exception
     {
         DatagramPacket sendPacket = new DatagramPacket(packet, packet.length, addr, port);
-        try{clientSocket.setSoTimeout(500);}catch(Exception e){}
 
-        byte[] receiveData = new byte[12];
-        DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+        byte[] response = new byte[1];
+        DatagramPacket receivePacket = new DatagramPacket(response, response.length);
         
         while(true)
         {
-            try{clientSocket.send(sendPacket);}catch(Exception e){}    
+            try{clientSocket.send(sendPacket);} catch(Exception e){
+            	output.printStr("Error while sending\n");
+            	continue;
+            }
 
-            try{clientSocket.receive(receivePacket);}catch(Exception e){
-                System.out.println("Der Server antwortet nicht. Das Packet wird erneut verschickt.");
+            try{clientSocket.receive(receivePacket);} catch(Exception e){
+                output.printStr("Error while receiving\n");
                 continue;
             }
-            String antwort=new String(receivePacket.getData()).trim();
-            if(antwort.equals("Packet_OK"))
+
+            if(response[0] == (byte) 0x0)
             {
-                //System.out.println("Das Packet ist korrekt angekommen.");
+                //output.printStr("The transfered packet is correct\n");
                 break;
             }
-            else if(antwort.equals("Packet_FAIL"))
+            else if(response[0] == (byte) 0x1)
             {
-                //System.out.println("Das Packet ist nicht korrekt angekommen. Das Packet wird erneut verschickt.");
+                //output.printStr("The transfered packet has an Error\n");
                 continue;
             }
-            else if(antwort.equals("File_FAIL"))
+            else if(response[0] == (byte) 0x2)
             {
-                System.out.println("Die Datei ist nicht korrekt uebertragen worden. Bitte verschicken Sie sie erneut.");
+                output.printStr("The transfered file has an Error\n");
                 break;
             }
-            else 
+            else
             {
-                System.out.println("Der Server antwortet nicht korrekt.");
+                output.printStr("Unknown response from Server\n");
                 continue;
             }
         }

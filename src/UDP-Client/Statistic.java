@@ -1,18 +1,26 @@
 public class Statistic extends Thread
 {
     public static long startZeit;
+    public Output output;
+
+    public Statistic(Output output)
+    {
+        this.output = output;
+    }
 
     @Override
     public void run()
     {
         try
         {
+            startZeit = System.currentTimeMillis();
+
             while(true)
             {
                 Thread.sleep(250);
-                    System.out.println("UebertragungsGeschwindigkeit: " 
-                        + ((UDPClient.packetNum*(1460-13))/((System.currentTimeMillis()-startZeit)))
-                        + " kiByte/sec");
+                    output.printStr("Transfer speed: "
+                        + ((UDPClient.packetNum*(Packet.payloadSizeMax))/((System.currentTimeMillis()-startZeit)))
+                        + " KiB/s");
                 //System.out.println("PaketNr: "+UDPSocketClient.PaketNr);
                 Thread.sleep(750);
             }
