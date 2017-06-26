@@ -64,7 +64,7 @@ public class UDPSocketServer
 			
 			
 			// Simulate packet loss.
-			if (random.nextDouble() < LOSS_RATE)continue;	
+			if (random.nextDouble() < LOSS_RATE) continue;	
 				
 			// Simulate network delay.
 			Thread.sleep((int)random.nextDouble() * AVERAGE_DELAY);

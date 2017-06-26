@@ -19,39 +19,7 @@ public class UDPClient
     private static byte[] bytePacket;
     private static byte[] bytePayload;
 
-    private static Ausgabe output;
-
-
-    public static void setup(String file, String addr, String port)
-    {
-        output = new Ausgabe();
-
-        try {
-            clientSocket = new DatagramSocket();
-            UDPClient.file = new File(file);
-            UDPClient.addr = InetAddress.getByName(addr);
-            UDPClient.port = Integer.parseInt(port);
-        } catch(Exception e){}
-
-        packetNum = 0;
-        packetCount = (long)(UDPClient.file.length() / (Packet.packetSizeMax - Packet.headerSize) + 1);
-    }
-
-    private static byte[] getFileChecksum() throws Exception
-    {
-        CRC16 crc = new CRC16();
-        byte[] buffer = new byte[4];
-
-        fileInput = new FileInputStream(file);
-        int restlen;
-        while((restlen = fileInput.read(buffer)) != -1)
-        {                    
-            crc.update(buffer, 0, restlen);
-        }
-        fileInput.close();
-
-        return Packet.intToByteArray((int)crc.getValue());
-    }
+    private static Statistic statistic;
 
     public static void main(String[] args) throws Exception
     {
@@ -81,12 +49,10 @@ public class UDPClient
         packet.setPayload(bytePayload);
         bytePacket = packet.genPacket();
 
-        senden(bytePacket);
+        send(bytePacket);
         //----------------------------------------------------------------------------------------------
         
-        Ausgabe.threadFlag = true;
-        Ausgabe.startZeit = System.currentTimeMillis();
-        output.start();
+        statistic.start();
         
         //----------Informationsdaten-------------------------------------------------------------------
         bytePayload = new byte[Packet.packetSizeMax - Packet.headerSize];
@@ -102,7 +68,7 @@ public class UDPClient
             packet.setPayload(bytePayload);
             bytePacket = packet.genPacket();
 
-            senden(bytePacket);
+            send(bytePacket);
         }
         fileInput.close();
         //----------------------------------------------------------------------------------------------
@@ -115,26 +81,57 @@ public class UDPClient
         packet.setPayload(rest);
         bytePacket = packet.genPacket();
 
-        senden(bytePacket);
+        send(bytePacket);
         //----------------------------------------------------------------------------------------------
         
-        Ausgabe.threadFlag = false;
-        clientSocket.close();
+        cleanup();
+    }
+
+    public static void setup(String file, String addr, String port)
+    {
+        try {
+            clientSocket = new DatagramSocket();
+            UDPClient.file = new File(file);
+            UDPClient.addr = InetAddress.getByName(addr);
+            UDPClient.port = Integer.parseInt(port);
+        } catch(Exception e){}
+
+        packetNum = 0;
+        packetCount = (long)(UDPClient.file.length() / (Packet.packetSizeMax - Packet.headerSize) + 1);
+
+        statistic = new Statistic();
+        Statistic.startZeit = System.currentTimeMillis();
+    }
+
+    private static byte[] getFileChecksum() throws Exception
+    {
+        CRC16 crc = new CRC16();
+        byte[] buffer = new byte[4];
+
+        fileInput = new FileInputStream(file);
+        int restlen;
+        while((restlen = fileInput.read(buffer)) != -1)
+        {                    
+            crc.update(buffer, 0, restlen);
+        }
+        fileInput.close();
+
+        return Packet.intToByteArray((int)crc.getValue());
     }
 
     public static void cleanup()
     {
-
+    	statistic.interrupt();
+        clientSocket.close();
     }
 
-    public static void senden(byte[] packet)
+    public static void send(byte[] packet)
     {
         DatagramPacket sendPacket = new DatagramPacket(packet, packet.length, addr, port);
-        try{clientSocket.setSoTimeout(500);}catch(Exception e){}//Timeout==1000ms==1sec
+        try{clientSocket.setSoTimeout(500);}catch(Exception e){}
 
         byte[] receiveData = new byte[12];
         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-        
         
         while(true)
         {
@@ -165,7 +162,6 @@ public class UDPClient
                 System.out.println("Der Server antwortet nicht korrekt.");
                 continue;
             }
-        
         }
     }
 }
