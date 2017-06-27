@@ -15,16 +15,6 @@ public class UDPServer
         int FILE_FAIL=2;
         boolean startpaketerthalten=false;
         
-        //---HEADER--------------------------------------------
-        //|CRC              |Typ|          Paketnummer          |
-        //| 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10| 11| 12|
-        int ChecksumCRCLaenge=4; //(int)
-        int TypLaenge=1; //(byte)
-        int PaketNrLaenge=8; //(long)        
-        
-        int HEADER=ChecksumCRCLaenge+TypLaenge+PaketNrLaenge;
-        //-----------------------------------------------------
-        
 		if (args.length != 1) 
         {
             Output.printStr("Usage: program <hostport>\n");
@@ -45,74 +35,43 @@ public class UDPServer
         while (true)
         {
             serverSocket.receive(receivePacket);
-            byte[] tmp=receivePacket.getData();
-            //System.out.println(Integer.toHexString(tmp.length));
-            
-            //-------------HEADER------------------------------
-            //CRC
-            byte[] CRCBytAry=new byte[ChecksumCRCLaenge];
-            for(int i=0;i<CRCBytAry.length;i++)CRCBytAry[i]=tmp[i];
-            int CRC=Convert.byteArrayToInt(CRCBytAry);
-            //System.out.println(Integer.toHexString((int)CRC));
-            
-            //Typ
-            byte Typ = tmp[CRCBytAry.length];
-            
-            //Paketnummer
-            byte[] PaketNrBytAry=new byte[PaketNrLaenge];
-            for(int i=0;i<PaketNrBytAry.length;i++)PaketNrBytAry[i]=tmp[i+ChecksumCRCLaenge+TypLaenge];
-            long PaketNr=Convert.byteArrayToLong(PaketNrBytAry);
+            byte[] tmp = receivePacket.getData();
+            byte[] buf = new byte[receivePacket.getLength()];
+            System.arraycopy(tmp, 0, buf, 0, buf.length);
 
-            //System.out.println("Paket erhalten");
-            //System.out.println("Status: "+Typ);
-            //System.out.println("LastPaketNr: "+LastPaketNr+"  PaketNR: "+PaketNr);
-            //-------------------------------------------------
-            
-            //---Paket-CRC-Checksum-Kontrolle------------------
-            byte[] CRCByte=new byte[ChecksumCRCLaenge];
-            //String CRCStr="0000";
-            //CRCByte=CRCStr.getBytes();
-            
-            for(int i=0;i<CRCByte.length;i++)tmp[i]=CRCByte[i];//CRC mit Nullen fuellen
-            
-            CRC16 CRCobj=new CRC16();
-            CRCobj.update(tmp,0,receivePacket.getLength());
-            //System.out.println(Integer.toHexString((int)CRCobj.getValue()));
-            if(CRC!=(int)CRCobj.getValue()){System.out.println("Paket-CRC fehlerhaft.");reply(PAKET_FAIL);continue;}
-            //-------------------------------------------------
-            
-            //------------NUTZDATEN----------------------------
-            byte[] buffer = new byte[receivePacket.getLength()-HEADER];
-            for(int i=0;i<buffer.length;i++)buffer[i]=tmp[i+HEADER];
-            //System.out.println(buffer.length);
-            //-------------------------------------------------
-        
+            Packet packet = new Packet();
+            if(!packet.setPacket(buf)) {
+                Output.printStr("Wrong packet CRC\n");
+                reply(PAKET_FAIL);
+                continue;
+            }
+            byte typ = packet.getTyp();
+            long packetNum = packet.getPacketNum();
+            byte[] payload = packet.getPayload();
+
             //------Startdaten------------------------------------------------------------
-            if(Typ == 0x0) 
+            if(typ == 0x0)
             {
-                //System.out.println(new String(tmp));
-            System.out.println("StartPacket erhalten: "+receivePacket.getLength()+" Byte");
-                    
                 if(startpaketerthalten==false)
                 {
-                System.out.println("Dateiuebertragung beginnt.");
+                Output.printStr("Transfer started\n");
                 startpaketerthalten=true;
                 
                 //Datei-CRC
                 byte[] dateiCRC=new byte[4];
-                for(int i=0;i<dateiCRC.length;i++)dateiCRC[i]=buffer[i];
+                for(int i=0;i<dateiCRC.length;i++)dateiCRC[i]=payload[i];
                 dateiCRCalt=Convert.byteArrayToInt(dateiCRC);
                     
                 //Dateiname
-                byte[] datei=new byte[buffer.length-dateiCRC.length];
-                for(int i=0;i<datei.length;i++)datei[i]=buffer[i+dateiCRC.length];
+                byte[] datei=new byte[payload.length-dateiCRC.length];
+                for(int i=0;i<datei.length;i++)datei[i]=payload[i+dateiCRC.length];
                 //System.out.println(new String(datei));
                 File file=new File(new String(datei));
                 String filename= file.getName();
                 fileOutput=new FileOutputStream(filename);
 
-                PaketAnzahl=PaketNr;
-                LastPaketNr=0;    
+                PaketAnzahl=packetNum;
+                LastPaketNr=0;
 
                 //Informationsausgabe------------
                 //Client
@@ -132,17 +91,17 @@ public class UDPServer
             //----------------------------------------------------------------------------
 
             //------Informationsdaten-----------------------------------------------------
-            else if(Typ == 0x1) //Informationsdaten
+            else if(typ == 0x1)
             {                    
                 //Paket schon durch erhalten aber durch Delay kam Request zu spaet an
-                if(LastPaketNr==PaketNr)
+                if(LastPaketNr==packetNum)
                 {
                     //System.out.println("Durch zu grosses Delay wurde vom Client das gleiche Paket erneut verschickt.");
                     reply(PAKET_OK);
                     continue;
                 }
                 //PaketNummer korrekt?
-                if(LastPaketNr+1!=PaketNr)
+                if(LastPaketNr+1!=packetNum)
                 {
                     System.out.println("Die PaketNummer ist falsch.");
                     //System.out.println("LastPaketNr: "+LastPaketNr+"  PaketNR: "+PaketNr);
@@ -152,19 +111,19 @@ public class UDPServer
                 LastPaketNr++;        
                 
                 //Datei-CRC-Checksum-Aktualisierung
-                CRCfile.update(buffer,0,buffer.length);
+                CRCfile.update(payload,0,payload.length);
                 
                 //System.out.println("InformationsPacket erhalten:"+receivePacket.getLength()+" Byte");
                 
                   //Datei schreiben aus empfangenen Packet                        
-                  fileOutput.write(buffer);
+                  fileOutput.write(payload);
             
                   reply(PAKET_OK);
             }
             //----------------------------------------------------------------------------
 
             //------Enddaten--------------------------------------------------------------
-            else if(Typ == 0x2) 
+            else if(typ == 0x2)
             {    
                 //Paket schon durch erhalten aber durch Delay kam Request zu spaet an
                 if(LastPaketNr==PaketAnzahl)
@@ -184,10 +143,10 @@ public class UDPServer
                 //System.out.println("EndPacket erhalten:"+receivePacket.getLength()+" Byte");
                 
                   //Datei schreiben aus empfangenen Packet
-                  fileOutput.write(buffer);
+                  fileOutput.write(payload);
                 
                 //Datei-CRC-Checksum-Aktualisierung
-                CRCfile.update(buffer,0,buffer.length);
+                CRCfile.update(payload,0,payload.length);
                 
                 //---Datei-CRC-Checksum-Kontrolle------------------
                 dateiCRCneu=(int)CRCfile.getValue();

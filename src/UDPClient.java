@@ -37,7 +37,7 @@ public class UDPClient
         	+ "\nFile length: " + (file.length()/1000) + " KiByte"
         	+ "\nPacket count: "+ packetCount +"\n");
         
-        //-----First Packet ----------------------------------------------------------------------------
+        //----- First Packet ---------------------------------------------------------------------------
         packet = new Packet();
         packet.setHeader((byte)0x0, Convert.longToByteArray(packetCount));
         byte[] fileCRC = checksum();
@@ -53,7 +53,7 @@ public class UDPClient
         statistic = new Statistic();
         statistic.start();
         
-        //----------Informationsdaten-------------------------------------------------------------------
+        //----- Middle Packet --------------------------------------------------------------------------
         bytePayload = new byte[Packet.payloadSizeMax];
         fileInput = new FileInputStream(file);
         int restLen;
@@ -71,7 +71,7 @@ public class UDPClient
         fileInput.close();
         //----------------------------------------------------------------------------------------------
 
-        //----------Enddaten----------------------------------------------------------------------------
+        //-----Last Packet -----------------------------------------------------------------------------
         packet = new Packet();
         packet.setHeader((byte)0x2, Convert.longToByteArray(packetNum));
         byte[] rest = new byte[restLen];

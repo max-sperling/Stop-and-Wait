@@ -1,3 +1,5 @@
+import java.util.Arrays;
+
 public class Packet
 {
     // | --- HEADER ---------------------------------------|
@@ -34,7 +36,7 @@ public class Packet
         this.payload = payload;
     }
 
-    private int calChecksum(byte[] packet)
+    private int calcChecksum(byte[] packet)
     {
         CRC16 crc = new CRC16();
         crc.update(packet, 0, packet.length);
@@ -46,8 +48,41 @@ public class Packet
         byte[] packet = new byte[headerSize + payload.length];
         System.arraycopy(header, 0, packet, 0, headerSize);
         System.arraycopy(payload, 0, packet, headerSize, payload.length);
-        byte[] checksum = Convert.intToByteArray(calChecksum(packet));
+        byte[] checksum = Convert.intToByteArray(calcChecksum(packet));
         System.arraycopy(checksum, 0, packet, 0, crcLen);
         return packet;
+    }
+
+    public boolean setPacket(byte[] packet)
+    {
+        System.arraycopy(packet, 0, header, 0, headerSize);
+        payload = new byte[packet.length - headerSize];
+        System.arraycopy(packet, headerSize, payload, 0, payload.length);
+        return checkChecksum(packet);
+    }
+
+    private boolean checkChecksum(byte[] packet)
+    {
+        byte[] crc = new byte[crcLen];
+        System.arraycopy(packet, 0, crc, 0, crc.length);
+        for(int i=0; i<crcLen; i++) packet[i] = (byte) 0x0;
+        return (calcChecksum(packet) == Convert.byteArrayToInt(crc));
+    }
+
+    public byte getTyp()
+    {
+        return header[crcLen];
+    }
+
+    public long getPacketNum()
+    {
+        byte[] packetNum = new byte[packetNumLen];
+        System.arraycopy(header, crcLen+typLen, packetNum, 0, packetNumLen);
+        return Convert.byteArrayToLong(packetNum);
+    }
+
+    public byte[] getPayload()
+    {
+        return payload;
     }
 }
