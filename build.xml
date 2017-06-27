@@ -1,0 +1,29 @@
+<project name="Stop-and-Wait" basedir="." default="jar">
+
+    <property name="src.dir" value="src"/>
+    <property name="bin.dir" value="bin"/>
+    <property name="classes.dir" value="${bin.dir}/classes"/>
+    <property name="jar.dir" value="${bin.dir}/jar"/>
+
+    <target name="clean">
+        <delete dir="${bin.dir}"/>
+    </target>
+
+    <target name="compile">
+        <mkdir dir="${classes.dir}"/>
+        <javac
+            includeantruntime="false"
+            srcdir="${src.dir}"
+            destdir="${classes.dir}">
+        </javac>
+    </target>
+
+    <target name="jar" depends="compile">
+        <mkdir dir="${jar.dir}"/>
+        <jar
+            basedir="${classes.dir}"
+            destfile="${jar.dir}/${ant.project.name}.jar">
+        </jar>
+    </target>
+
+</project>
