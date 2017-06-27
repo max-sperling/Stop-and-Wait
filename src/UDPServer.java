@@ -74,7 +74,7 @@ public class UDPServer
             //CRC
             byte[] CRCBytAry=new byte[ChecksumCRCLaenge];
             for(int i=0;i<CRCBytAry.length;i++)CRCBytAry[i]=tmp[i];
-            int CRC=UDPSocketServer.byteArrayToInt(CRCBytAry);
+            int CRC=byteArrayToInt(CRCBytAry);
             //System.out.println(Integer.toHexString((int)CRC));
             
             //Typ
@@ -83,7 +83,7 @@ public class UDPServer
             //Paketnummer
             byte[] PaketNrBytAry=new byte[PaketNrLaenge];
             for(int i=0;i<PaketNrBytAry.length;i++)PaketNrBytAry[i]=tmp[i+ChecksumCRCLaenge+TypLaenge];
-            long PaketNr=UDPSocketServer.ByteArrayTolong(PaketNrBytAry);
+            long PaketNr=byteArrayTolong(PaketNrBytAry);
 
             //System.out.println("Paket erhalten");
             //System.out.println("Status: "+Typ);
@@ -123,7 +123,7 @@ public class UDPServer
                 //Datei-CRC
                 byte[] dateiCRC=new byte[4];
                 for(int i=0;i<dateiCRC.length;i++)dateiCRC[i]=buffer[i];
-                dateiCRCalt=UDPSocketServer.byteArrayToInt(dateiCRC);
+                dateiCRCalt=byteArrayToInt(dateiCRC);
                     
                 //Dateiname
                 byte[] datei=new byte[buffer.length-dateiCRC.length];
@@ -131,7 +131,7 @@ public class UDPServer
                 //System.out.println(new String(datei));
                 File file=new File(new String(datei));
                 String filename= file.getName();
-                UDPSocketServer.fos=new FileOutputStream(filename);
+                fos=new FileOutputStream(filename);
 
                 PaketAnzahl=PaketNr;
                 LastPaketNr=0;    
@@ -179,7 +179,7 @@ public class UDPServer
                 //System.out.println("InformationsPacket erhalten:"+receivePacket.getLength()+" Byte");
                 
                   //Datei schreiben aus empfangenen Packet                        
-                  UDPSocketServer.fos.write(buffer);
+                  fos.write(buffer);
             
                   reply(PAKET_OK);
             }
@@ -206,7 +206,7 @@ public class UDPServer
                 //System.out.println("EndPacket erhalten:"+receivePacket.getLength()+" Byte");
                 
                   //Datei schreiben aus empfangenen Packet
-                  UDPSocketServer.fos.write(buffer);
+                  fos.write(buffer);
                 
                 //Datei-CRC-Checksum-Aktualisierung
                 CRCfile.update(buffer,0,buffer.length);
@@ -224,7 +224,7 @@ public class UDPServer
                 else reply(PAKET_OK);
 
                 System.out.println("Dateiuebertragung abgeschlossen.");
-                UDPSocketServer.fos.close();    
+                fos.close();    
                 startpaketerthalten=false;
                 CRCfile.reset();
             }
@@ -252,7 +252,7 @@ public class UDPServer
         //System.out.println("Request verschickt");
     }
     
-    public static long ByteArrayTolong(byte[] data)
+    public static long byteArrayTolong(byte[] data)
     {
         if (data == null || data.length != 8) return 0x0;
 
