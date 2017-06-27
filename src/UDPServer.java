@@ -4,14 +4,9 @@ import java.util.*;
 
 public class UDPServer
 {
-
-    private static final double LOSS_RATE = 0.0;
-    private static final int AVERAGE_DELAY = 0;
-
-
-    public static FileOutputStream fos;
-    public static DatagramPacket receivePacket;
     public static DatagramSocket serverSocket;
+    public static FileOutputStream fileOutput;
+    public static DatagramPacket receivePacket;
 
     public static void main(String[] args) throws Exception
     {
@@ -19,8 +14,6 @@ public class UDPServer
         int PAKET_FAIL=1;
         int FILE_FAIL=2;
         boolean startpaketerthalten=false;
-        
-        int port=0;
         
         //---HEADER--------------------------------------------
         //|CRC              |Typ|          Paketnummer          |
@@ -32,22 +25,15 @@ public class UDPServer
         int HEADER=ChecksumCRCLaenge+TypLaenge+PaketNrLaenge;
         //-----------------------------------------------------
         
-        if (args.length == 0) 
+		if (args.length != 1) 
         {
-            port = 3333;
-        }
-        else if (args.length != 1) 
-        {
-            System.out.println("Gib den Port als Parameter an.");
+            Output.printStr("Usage: program <hostport>\n");
             return;
         }
-        else port = Integer.parseInt(args[0]);
+
+        setup(args[0]);
 
         Random random = new Random();
-        
-        //Warten auf Datei
-        serverSocket = new DatagramSocket(port);
-        receivePacket = new DatagramPacket(new byte[1460], 1460);
         
         CRC16 CRCfile=new CRC16();
         long PaketAnzahl=0;
@@ -56,25 +42,17 @@ public class UDPServer
         int dateiCRCalt=0;
     
         
-        while (true) 
-        {            
+        while (true)
+        {
             serverSocket.receive(receivePacket);
             byte[] tmp=receivePacket.getData();
             //System.out.println(Integer.toHexString(tmp.length));
-            
-            
-            // Simulate packet loss.
-            if (random.nextDouble() < LOSS_RATE) continue;
-                
-            // Simulate network delay.
-            Thread.sleep((int)random.nextDouble() * AVERAGE_DELAY);
-            
             
             //-------------HEADER------------------------------
             //CRC
             byte[] CRCBytAry=new byte[ChecksumCRCLaenge];
             for(int i=0;i<CRCBytAry.length;i++)CRCBytAry[i]=tmp[i];
-            int CRC=byteArrayToInt(CRCBytAry);
+            int CRC=Convert.byteArrayToInt(CRCBytAry);
             //System.out.println(Integer.toHexString((int)CRC));
             
             //Typ
@@ -83,7 +61,7 @@ public class UDPServer
             //Paketnummer
             byte[] PaketNrBytAry=new byte[PaketNrLaenge];
             for(int i=0;i<PaketNrBytAry.length;i++)PaketNrBytAry[i]=tmp[i+ChecksumCRCLaenge+TypLaenge];
-            long PaketNr=byteArrayTolong(PaketNrBytAry);
+            long PaketNr=Convert.byteArrayToLong(PaketNrBytAry);
 
             //System.out.println("Paket erhalten");
             //System.out.println("Status: "+Typ);
@@ -123,7 +101,7 @@ public class UDPServer
                 //Datei-CRC
                 byte[] dateiCRC=new byte[4];
                 for(int i=0;i<dateiCRC.length;i++)dateiCRC[i]=buffer[i];
-                dateiCRCalt=byteArrayToInt(dateiCRC);
+                dateiCRCalt=Convert.byteArrayToInt(dateiCRC);
                     
                 //Dateiname
                 byte[] datei=new byte[buffer.length-dateiCRC.length];
@@ -131,7 +109,7 @@ public class UDPServer
                 //System.out.println(new String(datei));
                 File file=new File(new String(datei));
                 String filename= file.getName();
-                fos=new FileOutputStream(filename);
+                fileOutput=new FileOutputStream(filename);
 
                 PaketAnzahl=PaketNr;
                 LastPaketNr=0;    
@@ -179,7 +157,7 @@ public class UDPServer
                 //System.out.println("InformationsPacket erhalten:"+receivePacket.getLength()+" Byte");
                 
                   //Datei schreiben aus empfangenen Packet                        
-                  fos.write(buffer);
+                  fileOutput.write(buffer);
             
                   reply(PAKET_OK);
             }
@@ -206,7 +184,7 @@ public class UDPServer
                 //System.out.println("EndPacket erhalten:"+receivePacket.getLength()+" Byte");
                 
                   //Datei schreiben aus empfangenen Packet
-                  fos.write(buffer);
+                  fileOutput.write(buffer);
                 
                 //Datei-CRC-Checksum-Aktualisierung
                 CRCfile.update(buffer,0,buffer.length);
@@ -224,7 +202,7 @@ public class UDPServer
                 else reply(PAKET_OK);
 
                 System.out.println("Dateiuebertragung abgeschlossen.");
-                fos.close();    
+                fileOutput.close();    
                 startpaketerthalten=false;
                 CRCfile.reset();
             }
@@ -238,6 +216,12 @@ public class UDPServer
             
         }
     }
+
+    private static void setup(String port) throws Exception
+    {
+        serverSocket = new DatagramSocket(Integer.parseInt(port));
+        receivePacket = new DatagramPacket(new byte[1460], 1460);
+    }
     
     public static void reply(int status) throws Exception
     {        
@@ -250,30 +234,5 @@ public class UDPServer
         DatagramPacket reply = new DatagramPacket(response, response.length, clientHost, clientPort);
         serverSocket.send(reply);
         //System.out.println("Request verschickt");
-    }
-    
-    public static long byteArrayTolong(byte[] data)
-    {
-        if (data == null || data.length != 8) return 0x0;
-
-        return (long)
-        (
-            (long)(0xff & (data[0])) << 56  |
-            (long)(0xff & (data[1])) << 48  |
-            (long)(0xff & (data[2])) << 40  |
-            (long)(0xff & (data[3])) << 32  |
-            (long)(0xff & (data[4])) << 24  |
-            (long)(0xff & (data[5])) << 16  |
-            (long)(0xff & (data[6])) << 8   |
-            (long)(0xff & (data[7])) << 0
-        );
-    }
-    
-    public static int byteArrayToInt(byte [] b)
-    {
-        return (b[0] << 24)
-            + ((b[1] & 0xFF) << 16)
-            + ((b[2] & 0xFF) << 8)
-            + (b[3] & 0xFF);
     }
 }

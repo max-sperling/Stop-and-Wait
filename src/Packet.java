@@ -12,15 +12,21 @@ public class Packet
     public static int packetSizeMax = 1024;
     public static int payloadSizeMax = packetSizeMax - headerSize;
 
-    private byte[] checksum;
-    private byte typ;
-    private byte[] packetNum;
+    private byte[] header;
     private byte[] payload;
 
-    public void setHeader(byte typ, long packetNum)
-    {        
-        this.typ = typ;
-        this.packetNum = longToByteArray(packetNum);
+    public Packet()
+    {
+        header = new byte[headerSize];
+    }
+
+    public void setHeader(byte typ, byte[] packetNum)
+    {
+        header[crcLen] = typ;
+
+        for(int i=0; i<packetNumLen; i++) {
+            header[crcLen+typLen+i] = packetNum[i];
+        }
     }
 
     public void setPayload(byte[] payload)
@@ -38,42 +44,10 @@ public class Packet
     public byte[] genPacket()
     {
         byte[] packet = new byte[headerSize + payload.length];
-
-        packet[crcLen] = typ;
-        for(int i=0; i<packetNumLen; i++) packet[i+crcLen+typLen] = packetNum[i];
-        for(int i=0; i<payload.length; i++) packet[i+headerSize] = payload[i];
-
-        int crc = calChecksum(packet);
-        checksum = intToByteArray(crc);
-        for(int i=0; i<crcLen; i++) packet[i] = checksum[i];
-
+        System.arraycopy(header, 0, packet, 0, headerSize);
+        System.arraycopy(payload, 0, packet, headerSize, payload.length);
+        byte[] checksum = Convert.intToByteArray(calChecksum(packet));
+        System.arraycopy(checksum, 0, packet, 0, crcLen);
         return packet;
-    }
-
-    public static byte[] longToByteArray(long data) 
-    {
-        return new byte[]
-        { 
-            (byte)(((data >> 56) & 0xff)),
-            (byte)(((data >> 48) & 0xff)),
-            (byte)(((data >> 40) & 0xff)),
-            (byte)(((data >> 32) & 0xff)),
-            (byte)(((data >> 24) & 0xff)),
-            (byte)(((data >> 16) & 0xff)),
-            (byte)(((data >> 8) & 0xff)),
-            (byte)(((data >> 0) & 0xff))
-        };
-    }
-
-    public static byte[] intToByteArray(int value) 
-    {    
-        return new byte[]
-        {
-                (byte)(value >>> 24),
-                (byte)(value >>> 16),
-                (byte)(value >>> 8),
-                (byte)value
-        };
-
     }
 }

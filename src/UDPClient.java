@@ -19,21 +19,19 @@ public class UDPClient
     private static byte[] bytePacket;
     private static byte[] bytePayload;
 
-    private static Output output;
     private static Statistic statistic;
-
 
     public static void main(String[] args) throws Exception
     {
         if (args.length != 3) 
         {
-            output.printStr("Usage: program <filepath/file> <hostaddress> <hostport>\n");
+            Output.printStr("Usage: program <filepath/file> <hostaddress> <hostport>\n");
             return;
         }
     
         setup(args[0], args[1], args[2]);
 
-        output.printStr(
+        Output.printStr(
         	"Server: " + args[1]
         	+ "\nPort: " + args[2]
         	+ "\nFile length: " + (file.length()/1000) + " KiByte"
@@ -41,7 +39,7 @@ public class UDPClient
         
         //-----First Packet ----------------------------------------------------------------------------
         packet = new Packet();
-        packet.setHeader((byte)0x0, packetCount);
+        packet.setHeader((byte)0x0, Convert.longToByteArray(packetCount));
         byte[] fileCRC = checksum();
         byte[] fileName = args[0].getBytes();
         bytePayload = new byte[fileCRC.length + fileName.length];
@@ -52,7 +50,7 @@ public class UDPClient
         send(bytePacket);
         //----------------------------------------------------------------------------------------------
         
-        statistic = new Statistic(output);
+        statistic = new Statistic();
         statistic.start();
         
         //----------Informationsdaten-------------------------------------------------------------------
@@ -65,7 +63,7 @@ public class UDPClient
             if(restLen < (bytePayload.length)) break;
 
             packet = new Packet();
-            packet.setHeader((byte)0x1, packetNum);
+            packet.setHeader((byte)0x1, Convert.longToByteArray(packetNum));
             packet.setPayload(bytePayload);
             bytePacket = packet.genPacket();
             send(bytePacket);
@@ -75,7 +73,7 @@ public class UDPClient
 
         //----------Enddaten----------------------------------------------------------------------------
         packet = new Packet();
-        packet.setHeader((byte)0x2, packetNum);
+        packet.setHeader((byte)0x2, Convert.longToByteArray(packetNum));
         byte[] rest = new byte[restLen];
         for(int i=0; i<rest.length; i++) rest[i] = bytePayload[i];
         packet.setPayload(rest);
@@ -111,7 +109,7 @@ public class UDPClient
         }
         fileInput.close();
 
-        return Packet.intToByteArray((int)crc.getValue());
+        return Convert.intToByteArray((int)crc.getValue());
     }
 
     public static void cleanup()
@@ -130,33 +128,33 @@ public class UDPClient
         while(true)
         {
             try{clientSocket.send(sendPacket);} catch(Exception e){
-            	output.printStr("Error while sending\n");
+            	Output.printStr("Error while sending\n");
             	continue;
             }
 
             try{clientSocket.receive(receivePacket);} catch(Exception e){
-                output.printStr("Error while receiving\n");
+                Output.printStr("Error while receiving\n");
                 continue;
             }
 
             if(response[0] == (byte) 0x0)
             {
-                //output.printStr("The transfered packet is correct\n");
+                //Output.printStr("The transfered packet is correct\n");
                 break;
             }
             else if(response[0] == (byte) 0x1)
             {
-                //output.printStr("The transfered packet has an Error\n");
+                //Output.printStr("The transfered packet has an Error\n");
                 continue;
             }
             else if(response[0] == (byte) 0x2)
             {
-                output.printStr("The transfered file has an Error\n");
+                Output.printStr("The transfered file has an Error\n");
                 break;
             }
             else
             {
-                output.printStr("Unknown response from Server\n");
+                Output.printStr("Unknown response from Server\n");
                 continue;
             }
         }
