@@ -11,7 +11,7 @@ public class Packet
     public static int headerSize = crcLen + typLen + packetNumLen;
     //------------------------------------------------------
 
-    public static int packetSizeMax = 1024;
+    public static int packetSizeMax = 1460;
     public static int payloadSizeMax = packetSizeMax - headerSize;
 
     private byte[] header;

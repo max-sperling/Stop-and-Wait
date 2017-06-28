@@ -35,65 +35,85 @@ public class UDPClient
         	"Server: " + args[1]
         	+ "\nPort: " + args[2]
         	+ "\nFile length: " + (file.length()/1000) + " KiByte"
-        	+ "\nPacket count: "+ packetCount +"\n");
+        	+ "\nPacket count: "+ packetCount + "\n");
         
-        //----- First Packet ---------------------------------------------------------------------------
-        packet = new Packet();
-        packet.setHeader((byte)0x0, Convert.longToByteArray(packetCount));
-        byte[] fileCRC = checksum();
-        byte[] fileName = args[0].getBytes();
-        bytePayload = new byte[fileCRC.length + fileName.length];
-        for(int i=0; i<fileCRC.length; i++) bytePayload[i] = fileCRC[i];
-        for(int i=0; i<fileName.length; i++) bytePayload[fileCRC.length+i] = fileName[i];
-        packet.setPayload(bytePayload);
-        bytePacket = packet.genPacket();
-        send(bytePacket);
-        //----------------------------------------------------------------------------------------------
-        
-        statistic = new Statistic();
-        statistic.start();
-        
-        //----- Middle Packet --------------------------------------------------------------------------
-        bytePayload = new byte[Packet.payloadSizeMax];
-        fileInput = new FileInputStream(file);
-        int restLen;
-        while ((restLen = (fileInput.read(bytePayload, 0, bytePayload.length))) != -1) 
-        {
-            packetNum++;
-            if(restLen < (bytePayload.length)) break;
-
-            packet = new Packet();
-            packet.setHeader((byte)0x1, Convert.longToByteArray(packetNum));
-            packet.setPayload(bytePayload);
-            bytePacket = packet.genPacket();
-            send(bytePacket);
-        }
-        fileInput.close();
-        //----------------------------------------------------------------------------------------------
-
-        //-----Last Packet -----------------------------------------------------------------------------
-        packet = new Packet();
-        packet.setHeader((byte)0x2, Convert.longToByteArray(packetNum));
-        byte[] rest = new byte[restLen];
-        for(int i=0; i<rest.length; i++) rest[i] = bytePayload[i];
-        packet.setPayload(rest);
-        bytePacket = packet.genPacket();
-        send(bytePacket);
-        //----------------------------------------------------------------------------------------------
+        sendFile(args[0]);
         
         cleanup();
     }
 
-    public static void setup(String file, String addr, String port) throws Exception
+    public static void setup(String file, String addr, String port)
     {
-        clientSocket = new DatagramSocket();
-        clientSocket.setSoTimeout(250);
-        UDPClient.file = new File(file);
-        UDPClient.addr = InetAddress.getByName(addr);
-        UDPClient.port = Integer.parseInt(port);
+        try {
+            clientSocket = new DatagramSocket();
+            clientSocket.setSoTimeout(250);
+            UDPClient.file = new File(file);
+            UDPClient.addr = InetAddress.getByName(addr);
+            UDPClient.port = Integer.parseInt(port);
+            packetNum = 0;
+            packetCount = (long)(UDPClient.file.length() / Packet.payloadSizeMax + 1);
+        } catch(Exception e){
+            Output.printStr("Error during setup\n");
+        }
+    }
 
-        packetNum = 0;
-        packetCount = (long)(UDPClient.file.length() / Packet.payloadSizeMax + 1);
+    private static void sendFile(String file)
+    {
+        try {
+            //----- First Packet -------------------------------------------------------------------
+            packet = new Packet();
+            packet.setHeader((byte)0x0, Convert.longToByteArray(packetCount));
+            byte[] fileCRC = checksum();
+            byte[] fileName = file.getBytes();
+            bytePayload = new byte[fileCRC.length + fileName.length];
+            for(int i=0; i<fileCRC.length; i++) bytePayload[i] = fileCRC[i];
+            for(int i=0; i<fileName.length; i++) bytePayload[fileCRC.length+i] = fileName[i];
+            packet.setPayload(bytePayload);
+            bytePacket = packet.genPacket();
+            send(bytePacket);
+            //--------------------------------------------------------------------------------------
+        } catch(Exception e){
+            Output.printStr("Error during sending start file\n");
+        }
+        
+        statistic = new Statistic();
+        statistic.start();
+        int restLen = 0;
+        
+        try {
+            //----- Middle Packet ------------------------------------------------------------------
+            bytePayload = new byte[Packet.payloadSizeMax];
+            fileInput = new FileInputStream(file);
+            while ((restLen = (fileInput.read(bytePayload, 0, bytePayload.length))) != -1) 
+            {
+                packetNum++;
+                if(restLen < (bytePayload.length)) break;
+
+                packet = new Packet();
+                packet.setHeader((byte)0x1, Convert.longToByteArray(packetNum));
+                packet.setPayload(bytePayload);
+                bytePacket = packet.genPacket();
+                send(bytePacket);
+            }
+            fileInput.close();
+            //--------------------------------------------------------------------------------------
+        } catch(Exception e){
+            Output.printStr("Error during sending middle file\n");
+        }
+
+        try {
+            //-----Last Packet ---------------------------------------------------------------------
+            packet = new Packet();
+            packet.setHeader((byte)0x2, Convert.longToByteArray(packetNum));
+            byte[] rest = new byte[restLen];
+            for(int i=0; i<rest.length; i++) rest[i] = bytePayload[i];
+            packet.setPayload(rest);
+            bytePacket = packet.genPacket();
+            send(bytePacket);
+            //--------------------------------------------------------------------------------------
+        } catch(Exception e){
+            Output.printStr("Error during sending last file\n");
+        }
     }
 
     private static byte[] checksum() throws Exception
