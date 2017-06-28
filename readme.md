@@ -6,4 +6,4 @@ CMake <br>
 Qt <br>
 
 ## Building
-cmake -Hsrc/P2P-Tans -Bbin/P2P-Tans -G \<Generator\> -DCMAKE_CXX_FLAGS=\<Compiler-Flags\> <br>
+cmake -Hsrc/P2P-Trans -Bbin/P2P-Trans -G \<Generator\> -DCMAKE_CXX_FLAGS=\<Compiler-Flags\> <br>

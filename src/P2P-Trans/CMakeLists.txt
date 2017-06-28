@@ -2,8 +2,8 @@ cmake_minimum_required (VERSION 3.5)
 project (P2P-Transfer)
 
 file (GLOB TRANS_SRC
-    Code/Comp/PL0toCL0/*.hh
-    Code/Comp/PL0toCL0/*.cc)
+    Code/Trans/TransQt/*.hh
+    Code/Trans/TransQt/*.cc)
 
 set (VIEW_SRC
     Code/View/CLI/ViewCLI.hh
@@ -15,7 +15,7 @@ set (DATA_SRC
 
 set (MAIN_SRC
     Code/Main.cc
-    Code/Comp/ITrans.hh
+    Code/Trans/ITrans.hh
     Code/View/IView.hh
     Code/Data/IData.hh)
 
