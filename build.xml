@@ -1,4 +1,4 @@
-<project name="Stop-and-Wait" basedir="." default="jar">
+<project name="UDP-Transfer" basedir="." default="jar">
 
     <property name="src.dir" value="src"/>
     <property name="bin.dir" value="bin"/>

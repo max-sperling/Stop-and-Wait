@@ -1,7 +1,7 @@
-# Stop-and-Wait
+# UDP-Transfer
 
 ## Building
 ant
 
 ## Running
-java -cp Stop-and-Wait.jar <UDPClient|UDPServer>
+java -cp UDP-Transfer.jar <UDPClient|UDPServer>
