@@ -1,7 +1,9 @@
-# UDP-Transfer
+# P2P-Transfer
+
+## Requirements
+C++-Compiler <br>
+CMake <br>
+Qt <br>
 
 ## Building
-ant
-
-## Running
-java -cp UDP-Transfer.jar <UDPClient|UDPServer>
+cmake -Hsrc/P2P-Tans -Bbin/P2P-Tans -G \<Generator\> -DCMAKE_CXX_FLAGS=\<Compiler-Flags\> <br>
