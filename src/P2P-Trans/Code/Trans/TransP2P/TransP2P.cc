@@ -4,6 +4,8 @@
 
 #include "TransP2P.hh"
 
+#include <QCoreApplication>
+#include <iostream>
 #include "Server.hh"
 #include "Client.hh"
 
@@ -24,55 +26,41 @@ bool TransP2P::init(IViewPtr viewPtr, IConfPtr confPtr)
 
 bool TransP2P::exec(int argc, char *argv[])
 {
+    QCoreApplication app(argc, argv);
+
     if(!confPtr->init(argc, argv))
     {
         viewPtr->write("Usage: program <conf-File>");
         return false;
     }
 
-    string remoteIp;
-    unsigned int remoteServerPort;
-    unsigned int localServerPort;
-    unsigned int localClientPort;
+    string addr;
+    unsigned int port;
 
-    if(!confPtr->read(remoteIp, remoteServerPort,
-        localServerPort, localClientPort))
+    if(!confPtr->read(addr, port))
     {
         viewPtr->write("Error while reading Config");
         return false;
     }
 
-    // tokPtr = new Tokenizer;
-    // genPtr = new Generator;
+    serPtr = new Server();
+    if(!serPtr->init(port))
+    {
+        viewPtr->write("Error while init Server");
+        return false;
+    }
 
-    // deque<Token> token;
-    // try{
-    //     tokPtr->exec(srcCode, token);
-    // }
-    // catch(...){
-    //     viewPtr->write("Error while Tokenization");
-    //     return false;
-    // }
+    cliPtr = new Client();
+    if(!cliPtr->init(addr, port))
+    {
+        viewPtr->write("Error while init Client");
+        return false;
+    }
 
-    // deque<char> binary;
-    // try{
-    //     genPtr->exec(token, binary);
-    // }catch(CompEx &cex){
-    //     viewPtr->write("Error while Generating");
-    //     viewPtr->write(cex.getError());
-    //     return false;
-    // }
-
-    // viewPtr->write(binary);
-
-    // if(!dataPtr->write(binary))
-    // {
-    //     viewPtr->write("Error while writing File");
-    //     return false;
-    // }
-
-    // delete tokPtr;
-    // delete genPtr;
+    app.exec();
+    
+    // delete cliPtr;
+    // delete serPtr;
 
     return true;
 }

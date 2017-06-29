@@ -5,16 +5,15 @@
 
 #include "../IConf.hh"
 
-class ConfFile : public IConf
+class ConfJson : public IConf
 {
 public:
-    ConfFile(){}
-    ~ConfFile(){}
+    ConfJson(){}
+    ~ConfJson(){}
 
     // --- IData -----------------------------
     virtual bool init(int argc, char *argv[]);
-    virtual bool read(std::string &remoteIp, unsigned int &remoteServerPort,
-        unsigned int &localServerPort, unsigned int &localClientPort);
+    virtual bool read(std::string &addr, unsigned int &port);
     // ---------------------------------------
 
 private:

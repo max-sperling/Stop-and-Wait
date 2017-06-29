@@ -38,31 +38,31 @@ void JsonParser::parseFile(string file)
 
 void JsonParser::getValStr(string name, string &value)
 {
-    auto iter = m_pData.find(name);
-    if (iter == m_pData.end()) throw exception();
-    if (iter->second->type != data::types::text) throw exception();
+    auto iter = dataPtr.find(name);
+    if (iter == dataPtr.end()) throw exception();
+    if (iter->second->type != Data::Types::text) throw exception();
     value = iter->second->value;
 }
 
 void JsonParser::getValInt(string name, unsigned int &value)
 {
-    auto iter = m_pData.find(name);
-    if (iter == m_pData.end()) throw exception();
-    if (iter->second->type != data::types::number) throw exception();
+    auto iter = dataPtr.find(name);
+    if (iter == dataPtr.end()) throw exception();
+    if (iter->second->type != Data::Types::number) throw exception();
     value = stoi(iter->second->value);
 }
 
 void JsonParser::resetParser()
 {
-    for (auto it = m_pData.begin(); it != m_pData.end(); ++it)
+    for (auto it = dataPtr.begin(); it != dataPtr.end(); ++it)
     {
         delete it->second;
     }
-    m_pData.clear();
+    dataPtr.clear();
 
-    m_state = States::start;
-    m_tmpName = "";
-    m_tmpValue = "";
+    state = States::start;
+    tmpName = "";
+    tmpValue = "";
 }
 
 void JsonParser::changeState(char input)
@@ -77,25 +77,25 @@ void JsonParser::changeState(char input)
     case ':':
         break;
     case '"':
-        switch (m_state)
+        switch (state)
         {
         case States::start:
-            m_state = States::name;
+            state = States::name;
             break;
         case States::equals:
-            m_state = States::text;
+            state = States::text;
             break;
         case States::name:
-            m_state = States::equals;
+            state = States::equals;
             break;
         case States::text:
-            data* pData = new data();
-            pData->type = data::types::text;
-            pData->value = m_tmpValue;
-            m_pData.insert(pair<string, data*>(m_tmpName, pData));
-            m_tmpName = "";
-            m_tmpValue = "";
-            m_state = States::start;
+            Data* pData = new Data();
+            pData->type = Data::Types::text;
+            pData->value = tmpValue;
+            dataPtr.insert(pair<string, Data*>(tmpName, pData));
+            tmpName = "";
+            tmpValue = "";
+            state = States::start;
             break;
         }
         break;
@@ -109,41 +109,41 @@ void JsonParser::changeState(char input)
     case '7':
     case '8':
     case '9':
-        switch (m_state)
+        switch (state)
         {
         case States::name:
-            m_tmpName += input;
+            tmpName += input;
             break;
         case  States::equals:
-            m_state = States::number;
+            state = States::number;
         case States::text:
         case States::number:
-            m_tmpValue += input;
+            tmpValue += input;
             break;
         }
         break;
     case '}':
     case ',':
-        switch (m_state)
+        switch (state)
         {
         case States::number:
-            data* pData = new data();
-            pData->type = data::types::number;
-            pData->value = m_tmpValue;
-            m_pData.insert(pair<string, data*>(m_tmpName, pData));
-            m_tmpName = "";
-            m_tmpValue = "";
-            m_state = States::start;
+            Data* pData = new Data();
+            pData->type = Data::Types::number;
+            pData->value = tmpValue;
+            dataPtr.insert(pair<string, Data*>(tmpName, pData));
+            tmpName = "";
+            tmpValue = "";
+            state = States::start;
         }
         break;
     default:
-        switch (m_state)
+        switch (state)
         {
         case States::name:
-            m_tmpName += input;
+            tmpName += input;
             break;
         case States::text:
-            m_tmpValue += input;
+            tmpValue += input;
             break;
         }
         break;

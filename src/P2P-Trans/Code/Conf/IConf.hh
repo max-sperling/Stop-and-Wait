@@ -17,6 +17,5 @@ public:
     virtual ~IConf(){}
 
     virtual bool init(int argc, char *argv[]) = 0;
-    virtual bool read(std::string &remoteIp, unsigned int &remoteServerPort,
-        unsigned int &localServerPort, unsigned int &localClientPort) = 0;
+    virtual bool read(std::string &addr, unsigned int &port) = 0;
 };

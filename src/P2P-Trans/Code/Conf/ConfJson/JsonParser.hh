@@ -21,21 +21,21 @@ private:
     void resetParser();
     void changeState(char input);
 
-    std::fstream *filePtr;
-
     enum States
     {
         start, equals, name, number, text, error
-    } m_state;
+    };
 
-    struct data
+    struct Data
     {
-        enum types{text, number};
-        types type;
+        enum Types{text, number};
+        Types type;
         std::string value;
     };
 
-    std::string m_tmpName;
-    std::string m_tmpValue;
-    std::map<std::string, data*> m_pData;
+    std::fstream *filePtr;
+    States state;
+    std::string tmpName;
+    std::string tmpValue;
+    std::map<std::string, Data*> dataPtr;
 };
