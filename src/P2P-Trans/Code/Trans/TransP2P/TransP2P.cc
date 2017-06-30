@@ -4,7 +4,7 @@
 
 #include "TransP2P.hh"
 
-#include <QCoreApplication>
+#include <QApplication>
 #include <iostream>
 #include "Server.hh"
 #include "Client.hh"
@@ -26,11 +26,13 @@ bool TransP2P::init(IViewPtr viewPtr, IConfPtr confPtr)
 
 bool TransP2P::exec(int argc, char *argv[])
 {
-    QCoreApplication app(argc, argv);
+    QApplication app(argc, argv);
+
+    viewPtr->init();
 
     if(!confPtr->init(argc, argv))
     {
-        viewPtr->write("Usage: program <conf-File>");
+        viewPtr->logIt("Usage: program <conf-File>");
         return false;
     }
 
@@ -39,21 +41,21 @@ bool TransP2P::exec(int argc, char *argv[])
 
     if(!confPtr->read(addr, port))
     {
-        viewPtr->write("Error while reading Config");
+        viewPtr->logIt("Error while reading Config");
         return false;
     }
 
     serPtr = new Server();
     if(!serPtr->init(port))
     {
-        viewPtr->write("Error while init Server");
+        viewPtr->logIt("Error while init Server");
         return false;
     }
 
     cliPtr = new Client();
     if(!cliPtr->init(addr, port))
     {
-        viewPtr->write("Error while init Client");
+        viewPtr->logIt("Error while init Client");
         return false;
     }
 

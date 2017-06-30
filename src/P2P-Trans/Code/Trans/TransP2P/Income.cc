@@ -44,8 +44,8 @@ void Income::onGetTCPStream()
     if(content == "register")
     {
         qDebug() << "adding Host: " << tcpSocket->peerAddress().toString();
-        emit addHost(tcpSocket->peerAddress());
-        tcpSocket->write("registered");
+        //emit addHost(tcpSocket->peerAddress());
+        tcpSocket->write("connected");
     }
     else if(content == "unregister")
     {
@@ -69,7 +69,7 @@ void Income::onGetTCPStream()
     }
     else qDebug() << "unknown Packet";
 
-    tcpSocket->disconnectFromHost();
+    //tcpSocket->disconnectFromHost();
 }
 
 void Income::onDisconnected()

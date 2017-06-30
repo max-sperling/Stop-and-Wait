@@ -5,6 +5,7 @@
 #include "Client.hh"
 
 #include <iostream>
+#include <thread>
 using namespace std;
 
 // ***** Public ************************************************************************************
@@ -40,18 +41,15 @@ bool Client::connectToServer()
         qDebug() << "Can not connect";
         return false;
     }
+    qDebug() << "Connected";
 
-    //waitForInput();
+    waitForInput();
     return true;
 }
 
 void Client::waitForInput()
 {
-    while(true)
-    {
-        string file;
-        cin >> file;
-    }
+    sendTCPStream(QByteArray::fromStdString("register"));
 }
 
 bool Client::sendTCPStream(QByteArray data)
@@ -74,11 +72,11 @@ void Client::onGetTCPStream()
 {
     QString content = socket->readAll();
 
-    // if(content == "connected")
-    // {
-    //     addLog("Comm: connected to Host");
-    //     emit changedStateConnection(true);
-    // }
+    if(content == "connected")
+    {
+        qDebug() << "Comm: connected to Host";
+        //emit changedStateConnection(true);
+    }
     // else if(content == "started")
     // {
     //     emit addLog("Comm: conference started");
@@ -107,6 +105,7 @@ void Client::onGetTCPStream()
 
 void Client::onDisconnected()
 {
-
+    qDebug() << "Connection closed";
+    socket->deleteLater();
 }
 // *************************************************************************************************
