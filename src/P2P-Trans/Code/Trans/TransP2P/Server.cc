@@ -10,8 +10,6 @@
 // ***** Public ************************************************************************************
 Server::Server(IViewPtr viewPtr)
 {
-    //qRegisterMetaType<QHostAddress>("QHostAddress");
-    clientList = new QList<QHostAddress>();
     this->viewPtr = viewPtr;
 }
 
@@ -27,23 +25,7 @@ bool Server::init(unsigned int port)
 // ***** Protected *********************************************************************************
 void Server::incomingConnection(qintptr socketDescriptor)
 {
-    Income *income = new Income(socketDescriptor);
-
-    connect(income, SIGNAL(addHost(QHostAddress)), this, SLOT(addHost(QHostAddress)));
-    connect(income, SIGNAL(remHost(QHostAddress)), this, SLOT(remHost(QHostAddress)));
-
+    Income *income = new Income(viewPtr, socketDescriptor);
     income->start();
-}
-// *************************************************************************************************
-
-// ***** Slots *************************************************************************************
-void Server::addHost(QHostAddress ip)
-{
-    clientList->append(ip);
-}
-
-void Server::remHost(QHostAddress ip)
-{
-    clientList->removeAll(ip);
 }
 // *************************************************************************************************

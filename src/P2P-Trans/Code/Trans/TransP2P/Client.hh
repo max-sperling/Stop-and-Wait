@@ -15,6 +15,7 @@ class Client : public QObject
 
 public:
     Client(IViewPtr viewPtr);
+    ~Client();
     bool init(std::string addr, unsigned int port);
     bool sendFile(std::string fileName);
 
@@ -30,6 +31,5 @@ private:
 
 private slots:
     void onStartedThread();
-    void onGetTCPStream();
     void onDisconnected();
 };

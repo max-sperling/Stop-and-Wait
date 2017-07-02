@@ -21,9 +21,4 @@ protected:
 
 private:
 	IViewPtr viewPtr;
-    QList<QHostAddress> *clientList;
-
-private slots:
-    void addHost(QHostAddress ip);
-    void remHost(QHostAddress ip);
 };

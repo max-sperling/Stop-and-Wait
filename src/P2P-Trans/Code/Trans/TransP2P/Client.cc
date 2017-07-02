@@ -5,8 +5,10 @@
 #include "Client.hh"
 
 #include <QFile>
+#include <QFileInfo>
 #include <iostream>
 #include <thread>
+#include "Packet.hh"
 using namespace std;
 
 // ***** Public ************************************************************************************
@@ -18,14 +20,21 @@ Client::Client(IViewPtr viewPtr)
     //moveToThread(thread);
 }
 
+Client::~Client()
+{
+    socket->deleteLater();
+}
+
 bool Client::init(string addr, unsigned int port)
 {
     this->addr = QString::fromStdString(addr);
     this->port = port;
-    connect(socket, SIGNAL(readyRead()), this, SLOT(onGetTCPStream()));
+
     connect(socket, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
     connect(thread, SIGNAL(started()), this, SLOT(onStartedThread()));
+
     thread->start();
+
     return true;
 }
 
@@ -33,11 +42,33 @@ bool Client::sendFile(std::string fileName)
 {
     if(!connectToServer()) return false;
 
-    QFile file(QString::fromStdString(fileName));
-    if(!file.open(QIODevice::ReadOnly)) return false;
+    QFile file(QByteArray::fromStdString(fileName));
+    if(!file.open(QIODevice::ReadOnly))
+    {
+        viewPtr->logIt("Client: Can't open file");
+        return false;
+    }
 
-    QByteArray data = file.readAll();
-    socket->write(data);
+    viewPtr->logIt("Client: Sending started");
+
+    // Meta
+    QFileInfo fileInfo(file);
+    string baseName = fileInfo.fileName().toStdString();
+    MetaPacket metaPacket(baseName);
+    QByteArray metaData = QByteArray::fromStdString(metaPacket.getData());
+    socket->write(metaData);
+
+    // Content
+    QByteArray content = file.readAll();
+    ContentPacket contentPacket(content.toStdString());
+    QByteArray contentData = QByteArray::fromStdString(contentPacket.getData());
+    socket->write(contentData);
+    // todo: in Loop
+
+    viewPtr->logIt("Client: Sending finished");
+    file.close();
+
+    socket->disconnectFromHost();
 
     return true;
 }
@@ -53,10 +84,10 @@ bool Client::connectToServer()
 
     if(!socket->waitForConnected(2000))
     {
-        viewPtr->logIt("Can not connect");
+        viewPtr->logIt("Client: Can't connect");
         return false;
     }
-    viewPtr->logIt("Connected");
+    viewPtr->logIt("Client: Connected");
 
     return true;
 }
@@ -68,44 +99,8 @@ void Client::onStartedThread()
     
 }
 
-void Client::onGetTCPStream()
-{
-    QString content = socket->readAll();
-
-    if(content == "connected")
-    {
-        qDebug() << "Comm: connected to Host";
-        //emit changedStateConnection(true);
-    }
-    // else if(content == "started")
-    // {
-    //     emit addLog("Comm: conference started");
-    //     emit changedStateConference(true);
-    // }
-    // else if(content == "removed")
-    // {
-    //     emit addLog("Comm: removed from Host");
-    //     emit changedStateConference(false);
-    //     emit changedStateConnection(false);
-    //     m_tcpSocketHost->disconnectFromHost();
-    // }
-    // else if(content == "closed")
-    // {
-    //     emit addLog("Comm: conference closed");
-    //     emit changedStateConference(false);
-    // }
-    // else if(content == "disconnected")
-    // {
-    //     addLog("Comm: disconnected from Host");
-    //     emit changedStateConnection(false);
-    //     m_tcpSocketHost->disconnectFromHost();
-    // }
-    // else addLog("Comm: unknown Stream");
-}
-
 void Client::onDisconnected()
 {
-    qDebug() << "Connection closed";
-    socket->deleteLater();
+    viewPtr->logIt("Client: Disconnected");
 }
 // *************************************************************************************************

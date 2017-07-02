@@ -4,12 +4,15 @@
 
 #include "Income.hh"
 
-#include <QFile>
 #include "Server.hh"
+#include "Packet.hh"
+
+using namespace std;
 
 // ***** Public ************************************************************************************
-Income::Income(qintptr socketDescriptor)
+Income::Income(IViewPtr viewPtr, qintptr socketDescriptor)
 {
+    this->viewPtr = viewPtr;
     this->socketDescriptor = socketDescriptor;
 
     connect(this, SIGNAL(finished()), this, SLOT(deleteLater()));
@@ -30,7 +33,7 @@ void Income::run()
     connect(socket, SIGNAL(readyRead()), this, SLOT(onGetTCPStream()), Qt::DirectConnection);
     connect(socket, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
 
-    qDebug() << "Connection started: " << socketDescriptor;
+    viewPtr->logIt("Server: Connection started: " + to_string(socketDescriptor));
 
     exec();
 }
@@ -39,26 +42,53 @@ void Income::run()
 // ***** Slots *************************************************************************************
 void Income::onGetTCPStream()
 {
-    QByteArray q = socket->readAll();
-
-    QFile file;
-    file.setFileName("tmp.txt");
-
-
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Append))
+    while(socket->bytesAvailable())
     {
-        qDebug() << "Can't open file for written";
-        return;
-    }
-    file.write(q);
+        QByteArray buffer = socket->read(sizeof(int));
+        unsigned int size = buffer.toUInt();
 
-    file.close();
-        //socket->disconnectFromHost();
+        buffer = socket->read(sizeof(char));
+        unsigned int type = buffer.toUInt();
+
+        buffer = socket->read(size-sizeof(char));
+        string data = buffer.toStdString();
+
+        switch(type)
+        {
+        case Packet::Meta:
+            {
+                viewPtr->logIt("Server: Receiving started");
+                
+                file.setFileName(QString::fromStdString(data));
+
+                if (!file.open(QIODevice::WriteOnly))
+                {
+                    viewPtr->logIt("Server: Can't open file");
+                    return;
+                }
+            }
+            break;
+        case Packet::Content:
+            {
+                if(file.write(QByteArray::fromStdString(data)) == -1)
+                {
+                    viewPtr->logIt("Server: Can't write data");
+                    return;
+                }
+            }
+            break;
+        default:
+            viewPtr->logIt("Server: Unknown packet type");
+            break;
+        }
+    }
+    viewPtr->logIt("Server: Receiving finished");
 }
 
 void Income::onDisconnected()
 {
-    qDebug() << "Connection closed: " << socketDescriptor;
+    viewPtr->logIt("Server: Connection closed: " + to_string(socketDescriptor));
+    file.close();
     socket->deleteLater();
     exit(0);
 }

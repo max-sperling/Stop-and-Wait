@@ -6,6 +6,8 @@
 #include <QThread>
 #include <QHostAddress>
 #include <QTcpSocket>
+#include <QFile>
+#include "../../View/IView.hh"
 
 class Server;
 
@@ -14,14 +16,16 @@ class Income : public QThread
     Q_OBJECT
 
 public:
-    Income(qintptr socketDescriptor);
+    Income(IViewPtr viewPtr, qintptr socketDescriptor);
 
 protected:
     void run();
 
 private:
+    IViewPtr viewPtr;
     QTcpSocket *socket;
     qintptr socketDescriptor;
+    QFile file;
 
 signals:
     void error(QTcpSocket::SocketError socketError);
