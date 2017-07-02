@@ -7,6 +7,8 @@
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
+#include <QFileDialog>
+#include "../../Trans/ITrans.hh"
 
 using namespace std;
 
@@ -17,6 +19,7 @@ IViewPtr IView::create()
 
 ViewQt::ViewQt()
 {
+    listeners = new vector<IViewListener*>();
 }
 
 ViewQt::~ViewQt()
@@ -25,15 +28,23 @@ ViewQt::~ViewQt()
     delete lytWin;
 }
 
-bool ViewQt::init()
+bool ViewQt::start(ITransPtr transPtr)
 {
+    this->transPtr = transPtr;
+
     widWin = new QWidget();
-	lytWin = new QGridLayout();
+    lytWin = new QGridLayout();
     lstLog = new QListWidget();
+    btnSend = new QPushButton("Send");
+
+    connect(btnSend, SIGNAL(pressed()), this, SLOT(onClickedSend()));
 
     lytWin->addWidget(lstLog);
+    lytWin->addWidget(btnSend);
     widWin->setLayout(lytWin);
     widWin->show();
+
+    return true;
 }
 
 void ViewQt::logIt(string str)
@@ -60,10 +71,14 @@ bool ViewQt::detach(IViewListener *lis)
     return true;
 }
 
-void ViewQt::clickedSendFile(string file)
+void ViewQt::onClickedSend()
 {
+    QString fileName = QFileDialog::getOpenFileName(widWin, "Send", QDir::homePath());
+
+    if(fileName == "") return;
+
     for(IViewListener *lis : *listeners)
     {
-        lis->onClickedSendFile(file);
+        lis->onClickedSend(fileName.toStdString());
     }
 }

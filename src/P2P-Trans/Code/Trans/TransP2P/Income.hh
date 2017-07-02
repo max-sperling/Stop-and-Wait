@@ -14,15 +14,13 @@ class Income : public QThread
     Q_OBJECT
 
 public:
-    Income(qintptr Id, QObject *parent = 0);
+    Income(qintptr socketDescriptor);
 
 protected:
     void run();
 
 private:
-    Server *server;
-
-    QTcpSocket *tcpSocket;
+    QTcpSocket *socket;
     qintptr socketDescriptor;
 
 signals:

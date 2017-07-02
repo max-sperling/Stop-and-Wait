@@ -4,15 +4,17 @@
 
 #include "Client.hh"
 
+#include <QFile>
 #include <iostream>
 #include <thread>
 using namespace std;
 
 // ***** Public ************************************************************************************
-Client::Client()
+Client::Client(IViewPtr viewPtr)
 {
     thread = new QThread();
     socket = new QTcpSocket();
+    this->viewPtr =  viewPtr;
     //moveToThread(thread);
 }
 
@@ -24,6 +26,19 @@ bool Client::init(string addr, unsigned int port)
     connect(socket, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
     connect(thread, SIGNAL(started()), this, SLOT(onStartedThread()));
     thread->start();
+    return true;
+}
+
+bool Client::sendFile(std::string fileName)
+{
+    if(!connectToServer()) return false;
+
+    QFile file(QString::fromStdString(fileName));
+    if(!file.open(QIODevice::ReadOnly)) return false;
+
+    QByteArray data = file.readAll();
+    socket->write(data);
+
     return true;
 }
 // *************************************************************************************************
@@ -38,26 +53,11 @@ bool Client::connectToServer()
 
     if(!socket->waitForConnected(2000))
     {
-        qDebug() << "Can not connect";
+        viewPtr->logIt("Can not connect");
         return false;
     }
-    qDebug() << "Connected";
+    viewPtr->logIt("Connected");
 
-    waitForInput();
-    return true;
-}
-
-void Client::waitForInput()
-{
-    sendTCPStream(QByteArray::fromStdString("register"));
-}
-
-bool Client::sendTCPStream(QByteArray data)
-{
-    if(socket->state() != QTcpSocket::ConnectedState)
-        return false;
-
-    socket->write(data);
     return true;
 }
 // *************************************************************************************************
@@ -65,7 +65,7 @@ bool Client::sendTCPStream(QByteArray data)
 // ***** Private Slots *****************************************************************************
 void Client::onStartedThread()
 {
-    connectToServer();
+    
 }
 
 void Client::onGetTCPStream()

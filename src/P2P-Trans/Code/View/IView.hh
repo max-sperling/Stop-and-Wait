@@ -3,13 +3,11 @@
 /* Author: Max Sperling */
 /************************/
 
-#include <memory>
+#include "IViewFwd.hh"
+
 #include <string>
 #include <deque>
-
-class IView;
-typedef std::shared_ptr<IView> IViewPtr;
-class IViewListener;
+#include "../Trans/ITransFwd.hh"
 
 class IView
 {
@@ -17,7 +15,7 @@ public:
     static IViewPtr create();
     virtual ~IView(){}
 
-    virtual bool init() = 0;
+    virtual bool start(ITransPtr transPtr) = 0;
     virtual void logIt(std::string str) = 0;
     virtual bool attach(IViewListener *lis) = 0;
     virtual bool detach(IViewListener *lis) = 0;
@@ -26,5 +24,5 @@ public:
 class IViewListener
 {
 public:
-    virtual void onClickedSendFile(std::string str) = 0;
+    virtual void onClickedSend(std::string str) = 0;
 };

@@ -7,19 +7,21 @@
 #include <QHostAddress>
 #include <QTcpSocket>
 #include <string>
+#include "../../View/IView.hh"
 
 class Client : public QObject
 {
     Q_OBJECT
 
 public:
-    Client();
+    Client(IViewPtr viewPtr);
     bool init(std::string addr, unsigned int port);
+    bool sendFile(std::string fileName);
 
 private:
     bool connectToServer();
-    void waitForInput();
-    bool sendTCPStream(QByteArray data);
+
+    IViewPtr viewPtr;
 
     QThread *thread;
     QTcpSocket *socket;

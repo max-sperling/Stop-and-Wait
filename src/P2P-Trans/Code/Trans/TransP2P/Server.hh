@@ -6,21 +6,22 @@
 #include <QString>
 #include <QHostAddress>
 #include <QTcpServer>
+#include "../../View/IView.hh"
 
 class Server : public QTcpServer
 {
     Q_OBJECT
 
 public:
-    Server(QObject *parent = 0);
+    Server(IViewPtr viewPtr);
     bool init(unsigned int port);
-    QList<QHostAddress> *getHosts();
 
 protected:
     void incomingConnection(qintptr socketDescriptor);
 
 private:
-    QList<QHostAddress> *hostList;
+	IViewPtr viewPtr;
+    QList<QHostAddress> *clientList;
 
 private slots:
     void addHost(QHostAddress ip);

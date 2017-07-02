@@ -28,7 +28,8 @@ bool TransP2P::exec(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    viewPtr->init();
+    viewPtr->start(shared_from_this());
+    viewPtr->attach(this);
 
     if(!confPtr->init(argc, argv))
     {
@@ -45,14 +46,14 @@ bool TransP2P::exec(int argc, char *argv[])
         return false;
     }
 
-    serPtr = new Server();
+    serPtr = new Server(viewPtr);
     if(!serPtr->init(port))
     {
         viewPtr->logIt("Error while init Server");
         return false;
     }
 
-    cliPtr = new Client();
+    cliPtr = new Client(viewPtr);
     if(!cliPtr->init(addr, port))
     {
         viewPtr->logIt("Error while init Client");
@@ -65,4 +66,9 @@ bool TransP2P::exec(int argc, char *argv[])
     // delete serPtr;
 
     return true;
+}
+
+void TransP2P::onClickedSend(std::string str)
+{
+    cliPtr->sendFile(str);
 }

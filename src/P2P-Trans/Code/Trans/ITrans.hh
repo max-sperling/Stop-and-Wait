@@ -3,12 +3,10 @@
 /* Author: Max Sperling */
 /************************/
 
-#include <memory>
-#include "../View/IView.hh"
-#include "../Conf/IConf.hh"
+#include "ITransFwd.hh"
 
-class ITrans;
-typedef std::shared_ptr<ITrans> ITransPtr;
+#include "../View/IViewFwd.hh"
+#include "../Conf/IConf.hh"
 
 class ITrans
 {

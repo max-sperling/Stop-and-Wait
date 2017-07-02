@@ -4,13 +4,13 @@
 
 #include "Income.hh"
 
+#include <QFile>
 #include "Server.hh"
 
 // ***** Public ************************************************************************************
-Income::Income(qintptr Id, QObject *parent) : QThread(parent)
+Income::Income(qintptr socketDescriptor)
 {
-    socketDescriptor = Id;
-    server = (Server *)parent;
+    this->socketDescriptor = socketDescriptor;
 
     connect(this, SIGNAL(finished()), this, SLOT(deleteLater()));
 }
@@ -19,16 +19,16 @@ Income::Income(qintptr Id, QObject *parent) : QThread(parent)
 // ***** Protected *********************************************************************************
 void Income::run()
 {
-    tcpSocket = new QTcpSocket();
+    socket = new QTcpSocket();
 
-    if(!tcpSocket->setSocketDescriptor(this->socketDescriptor))
+    if(!socket->setSocketDescriptor(this->socketDescriptor))
     {
-        emit error(tcpSocket->error());
+        emit error(socket->error());
         return;
     }
 
-    connect(tcpSocket, SIGNAL(readyRead()), this, SLOT(onGetTCPStream()), Qt::DirectConnection);
-    connect(tcpSocket, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
+    connect(socket, SIGNAL(readyRead()), this, SLOT(onGetTCPStream()), Qt::DirectConnection);
+    connect(socket, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
 
     qDebug() << "Connection started: " << socketDescriptor;
 
@@ -39,43 +39,27 @@ void Income::run()
 // ***** Slots *************************************************************************************
 void Income::onGetTCPStream()
 {
-    QString content = tcpSocket->readAll();
+    QByteArray q = socket->readAll();
 
-    if(content == "register")
-    {
-        qDebug() << "adding Host: " << tcpSocket->peerAddress().toString();
-        //emit addHost(tcpSocket->peerAddress());
-        tcpSocket->write("connected");
-    }
-    else if(content == "unregister")
-    {
-        qDebug() << "removing Host: " << tcpSocket->peerAddress().toString();
-        emit remHost(tcpSocket->peerAddress());
-    }
-    else if(content == "request")
-    {
-        QString hostsStr = "";
-        QList<QHostAddress>::iterator i;
-        QList<QHostAddress> *hostList = server->getHosts();
-        for(i=hostList->begin(); i!=hostList->end(); ++i)
-        {
-            if(i+1 == hostList->end())
-                hostsStr += i->toString();
-            else
-                hostsStr += i->toString() + ",";
-        }
-        qDebug() << "sending Hostlist: " << hostsStr;
-        tcpSocket->write(hostsStr.toLatin1());
-    }
-    else qDebug() << "unknown Packet";
+    QFile file;
+    file.setFileName("tmp.txt");
 
-    //tcpSocket->disconnectFromHost();
+
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Append))
+    {
+        qDebug() << "Can't open file for written";
+        return;
+    }
+    file.write(q);
+
+    file.close();
+        //socket->disconnectFromHost();
 }
 
 void Income::onDisconnected()
 {
     qDebug() << "Connection closed: " << socketDescriptor;
-    tcpSocket->deleteLater();
+    socket->deleteLater();
     exit(0);
 }
 // *************************************************************************************************

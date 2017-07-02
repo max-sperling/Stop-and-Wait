@@ -8,10 +8,11 @@
 #include "Income.hh"
 
 // ***** Public ************************************************************************************
-Server::Server(QObject *parent) : QTcpServer(parent)
+Server::Server(IViewPtr viewPtr)
 {
-    qRegisterMetaType<QHostAddress>("QHostAddress");
-    hostList = new QList<QHostAddress>();
+    //qRegisterMetaType<QHostAddress>("QHostAddress");
+    clientList = new QList<QHostAddress>();
+    this->viewPtr = viewPtr;
 }
 
 bool Server::init(unsigned int port)
@@ -21,17 +22,12 @@ bool Server::init(unsigned int port)
 
     return true;
 }
-
-QList<QHostAddress> *Server::getHosts()
-{
-    return hostList;
-}
 // *************************************************************************************************
 
 // ***** Protected *********************************************************************************
 void Server::incomingConnection(qintptr socketDescriptor)
 {
-    Income *income = new Income(socketDescriptor, this);
+    Income *income = new Income(socketDescriptor);
 
     connect(income, SIGNAL(addHost(QHostAddress)), this, SLOT(addHost(QHostAddress)));
     connect(income, SIGNAL(remHost(QHostAddress)), this, SLOT(remHost(QHostAddress)));
@@ -43,11 +39,11 @@ void Server::incomingConnection(qintptr socketDescriptor)
 // ***** Slots *************************************************************************************
 void Server::addHost(QHostAddress ip)
 {
-    hostList->append(ip);
+    clientList->append(ip);
 }
 
 void Server::remHost(QHostAddress ip)
 {
-    hostList->removeAll(ip);
+    clientList->removeAll(ip);
 }
 // *************************************************************************************************
