@@ -14,10 +14,8 @@ using namespace std;
 // ***** Public ************************************************************************************
 Client::Client(IViewPtr viewPtr)
 {
-    thread = new QThread();
     socket = new QTcpSocket();
     this->viewPtr =  viewPtr;
-    //moveToThread(thread);
 }
 
 Client::~Client()
@@ -31,9 +29,6 @@ bool Client::init(string addr, unsigned int port)
     this->port = port;
 
     connect(socket, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
-    connect(thread, SIGNAL(started()), this, SLOT(onStartedThread()));
-
-    thread->start();
 
     return true;
 }
@@ -59,11 +54,14 @@ bool Client::sendFile(std::string fileName)
     socket->write(metaData);
 
     // Content
-    QByteArray content = file.readAll();
-    ContentPacket contentPacket(content.toStdString());
-    QByteArray contentData = QByteArray::fromStdString(contentPacket.getData());
-    socket->write(contentData);
-    // todo: in Loop
+    QByteArray content;
+    while(!(content = file.read(1024*1024)).isEmpty())
+    {
+        ContentPacket contentPacket(content.toStdString());
+        QByteArray contentData = QByteArray::fromStdString(contentPacket.getData());
+        viewPtr->logIt("sending: "+to_string(contentData.size()));
+        socket->write(contentData);
+    }
 
     viewPtr->logIt("Client: Sending finished");
     file.close();
@@ -94,11 +92,6 @@ bool Client::connectToServer()
 // *************************************************************************************************
 
 // ***** Private Slots *****************************************************************************
-void Client::onStartedThread()
-{
-    
-}
-
 void Client::onDisconnected()
 {
     viewPtr->logIt("Client: Disconnected");

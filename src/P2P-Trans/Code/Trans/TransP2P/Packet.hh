@@ -6,6 +6,7 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
+#include <array>
 
 class Packet
 {
@@ -14,6 +15,16 @@ public:
     {
         Meta, Content
     };
+
+    static std::array<unsigned char, 4> intToBytes(int value)
+    {
+        std::array<unsigned char, 4> result;
+        result.at(0) = (value >> 24) & 0xFF;
+        result.at(1) = (value >> 16) & 0xFF;
+        result.at(2) = (value >>  8) & 0xFF;
+        result.at(3) = (value      ) & 0xFF;
+        return result;
+    }
 
     static Packet *create(std::string data);
 
@@ -36,9 +47,8 @@ public:
     // --- Packet ----------
     virtual std::string getData()
     {
-        std::stringstream ss;
-        ss << std::setw(sizeof(int)) << std::setfill('0') << 1+baseName.length();
-        std::string data = ss.str() + std::to_string(Packet::Meta) + baseName;
+        std::array<unsigned char, 4> len = intToBytes(1+baseName.length());
+        std::string data = std::string(std::begin(len), std::end(len)) + std::to_string(Packet::Meta) + baseName;
         return data;
     }
     virtual Type getType()
@@ -62,9 +72,8 @@ public:
     // --- Packet ----------
     virtual std::string getData()
     {
-        std::stringstream ss;
-        ss << std::setw(sizeof(int)) << std::setfill('0') << 1+content.length();
-        std::string data = ss.str() + std::to_string(Packet::Content) + content;
+        std::array<unsigned char, 4> len = intToBytes(1+content.length());
+        std::string data = std::string(std::begin(len), std::end(len)) + std::to_string(Packet::Content) + content;
         return data;
     }
     virtual Type getType()

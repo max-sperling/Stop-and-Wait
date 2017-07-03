@@ -23,13 +23,10 @@ private:
     bool connectToServer();
 
     IViewPtr viewPtr;
-
-    QThread *thread;
     QTcpSocket *socket;
     QString addr;
     quint16 port;
 
 private slots:
-    void onStartedThread();
     void onDisconnected();
 };
