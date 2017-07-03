@@ -4,7 +4,6 @@
 /************************/
 
 #include <QString>
-#include <QHostAddress>
 #include <QTcpServer>
 #include "../../View/IView.hh"
 

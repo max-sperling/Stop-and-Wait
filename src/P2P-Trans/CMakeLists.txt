@@ -8,7 +8,6 @@ file (GLOB TRANS_SRC
     Code/Trans/TransP2P/*.cc)
 
 set (QT_TRANS
-    Code/Trans/TransP2P/TransP2P.hh
     Code/Trans/TransP2P/Server.hh
     Code/Trans/TransP2P/Income.hh
     Code/Trans/TransP2P/Client.hh)

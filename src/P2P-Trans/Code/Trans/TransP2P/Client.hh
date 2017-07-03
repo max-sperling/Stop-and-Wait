@@ -3,8 +3,7 @@
 /* Author: Max Sperling */
 /************************/
 
-#include <QThread>
-#include <QHostAddress>
+#include <QString>
 #include <QTcpSocket>
 #include <string>
 #include "../../View/IView.hh"

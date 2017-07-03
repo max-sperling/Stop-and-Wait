@@ -9,7 +9,8 @@
 class Server;
 class Client;
 
-class TransP2P : public ITrans, public std::enable_shared_from_this<ITrans>, public IViewListener
+class TransP2P : public ITrans, public IViewListener,
+    public std::enable_shared_from_this<ITrans>
 {
 public:
     TransP2P(){}

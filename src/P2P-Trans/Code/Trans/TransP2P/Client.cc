@@ -6,9 +6,8 @@
 
 #include <QFile>
 #include <QFileInfo>
-#include <iostream>
-#include <thread>
 #include "Packet.hh"
+
 using namespace std;
 
 // ***** Public ************************************************************************************

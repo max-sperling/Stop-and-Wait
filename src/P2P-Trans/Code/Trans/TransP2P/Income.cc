@@ -4,9 +4,8 @@
 
 #include "Income.hh"
 
-#include "Server.hh"
-#include "Packet.hh"
 #include <QDir>
+#include "Packet.hh"
 
 using namespace std;
 
