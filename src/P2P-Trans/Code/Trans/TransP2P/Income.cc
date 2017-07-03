@@ -43,32 +43,16 @@ void Income::run()
 // ***** Slots *************************************************************************************
 void Income::onGetTCPStream()
 {
-    auto byteArrayToInt = [](std::array<unsigned char, 4> value)
-        {
-            return (value[0] << 24)
-                + ((value[1] & 0xFF) << 16)
-                + ((value[2] & 0xFF) << 8)
-                + (value[3] & 0xFF);
-        };
-
     while(socket->bytesAvailable())
     {
         QByteArray buffer = socket->read(sizeof(int));
-        std::array<unsigned char, 4> value;
-        value[0] = buffer[0];
-        value[1] = buffer[1];
-        value[2] = buffer[2];
-        value[3] = buffer[3];
-        //(buffer.begin(), buffer.end());
-        unsigned int size = byteArrayToInt(value);
+        std::array<char, 4> value = {
+            buffer[0], buffer[1], buffer[2], buffer[3]};        
+        unsigned int size = Packet::byteArrayToInt(value);
 
-        buffer = socket->read(sizeof(char));
-        unsigned int type = buffer.toUInt();
+        Packet packet(size, (socket->read(size).toStdString()));
 
-        buffer = socket->read(size-sizeof(char));
-        string data = buffer.toStdString();
-
-        switch(type)
+        switch(packet.getType())
         {
         case Packet::Meta:
             {
@@ -76,7 +60,7 @@ void Income::onGetTCPStream()
                 
                 QString dir = "./Files/";
                 QDir().mkdir(dir);
-                file.setFileName(dir + QString::fromStdString(data));
+                file.setFileName(dir + QString::fromStdString(packet.getData()));
 
                 if (!file.open(QFile::WriteOnly | QFile::Truncate))
                 {
@@ -87,7 +71,7 @@ void Income::onGetTCPStream()
             break;
         case Packet::Content:
             {
-                if(file.write(QByteArray::fromStdString(data)) == -1)
+                if(file.write(QByteArray::fromStdString(packet.getData())) == -1)
                 {
                     viewPtr->logIt("Server: Can't write data");
                     return;

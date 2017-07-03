@@ -31,12 +31,6 @@ bool TransP2P::exec(int argc, char *argv[])
     viewPtr->start(shared_from_this());
     viewPtr->attach(this);
 
-    if(!confPtr->init(argc, argv))
-    {
-        viewPtr->logIt("Usage: program <conf-File>");
-        return false;
-    }
-
     string addr;
     unsigned int port;
 

@@ -12,10 +12,6 @@ public:
     ~ConfJson(){}
 
     // --- IData -----------------------------
-    virtual bool init(int argc, char *argv[]);
     virtual bool read(std::string &addr, unsigned int &port);
     // ---------------------------------------
-
-private:
-    std::string confFile;
 };

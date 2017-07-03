@@ -48,19 +48,17 @@ bool Client::sendFile(std::string fileName)
 
     // Meta
     QFileInfo fileInfo(file);
-    string baseName = fileInfo.fileName().toStdString();
-    MetaPacket metaPacket(baseName);
-    QByteArray metaData = QByteArray::fromStdString(metaPacket.getData());
-    socket->write(metaData);
+    string name = fileInfo.fileName().toStdString();
+    Packet metaPacket(Packet::Meta, name);
+    socket->write(QByteArray::fromStdString(metaPacket.getRaw()));
 
     // Content
-    QByteArray content;
-    while(!(content = file.read(1024*1024)).isEmpty())
+    QByteArray buffer;
+    while(!(buffer = file.read(Packet::fileSizeMax)).isEmpty())
     {
-        ContentPacket contentPacket(content.toStdString());
-        QByteArray contentData = QByteArray::fromStdString(contentPacket.getData());
-        viewPtr->logIt("sending: "+to_string(contentData.size()));
-        socket->write(contentData);
+        string content = buffer.toStdString();
+        Packet contentPacket(Packet::Content, content);
+        socket->write(QByteArray::fromStdString(contentPacket.getRaw()));
     }
 
     viewPtr->logIt("Client: Sending finished");
