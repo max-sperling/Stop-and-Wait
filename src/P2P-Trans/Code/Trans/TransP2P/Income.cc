@@ -10,10 +10,10 @@
 using namespace std;
 
 // ***** Public ************************************************************************************
-Income::Income(IViewPtr viewPtr, qintptr socketDescriptor)
+Income::Income(IViewPtr viewPtr, qintptr socketId)
 {
-    this->viewPtr = viewPtr;
-    this->socketDescriptor = socketDescriptor;
+    m_viewPtr = viewPtr;
+    m_socketId = socketId;
 
     connect(this, SIGNAL(finished()), this, SLOT(deleteLater()));
 }
@@ -22,18 +22,18 @@ Income::Income(IViewPtr viewPtr, qintptr socketDescriptor)
 // ***** Protected *********************************************************************************
 void Income::run()
 {
-    socket = new QTcpSocket();
+    m_socket = new QTcpSocket();
 
-    if(!socket->setSocketDescriptor(this->socketDescriptor))
+    if(!m_socket->setSocketDescriptor(m_socketId))
     {
-        emit error(socket->error());
+        emit error(m_socket->error());
         return;
     }
 
-    connect(socket, SIGNAL(readyRead()), this, SLOT(onGetTCPStream()), Qt::QueuedConnection);
-    connect(socket, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
+    connect(m_socket, SIGNAL(readyRead()), this, SLOT(onGetTCPStream()), Qt::QueuedConnection);
+    connect(m_socket, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
 
-    viewPtr->logIt("Server: Connection started: " + to_string(socketDescriptor));
+    m_viewPtr->logIt("Server: Connection started: " + to_string(m_socketId));
 
     exec();
 }
@@ -42,43 +42,43 @@ void Income::run()
 // ***** Slots *************************************************************************************
 void Income::onGetTCPStream()
 {
-    while(socket->bytesAvailable())
+    while(m_socket->bytesAvailable())
     {
-        QByteArray buffer = socket->read(sizeof(int));
+        QByteArray buffer = m_socket->read(sizeof(int));
         std::array<char, 4> value = {
             buffer[0], buffer[1], buffer[2], buffer[3]};        
         unsigned int size = Packet::byteArrayToInt(value);
 
-        Packet packet(size, (socket->read(size).toStdString()));
+        Packet packet(size, (m_socket->read(size).toStdString()));
 
         switch(packet.getType())
         {
         case Packet::Meta:
             {
-                viewPtr->logIt("Server: Receiving started");
+                m_viewPtr->logIt("Server: Receiving started");
                 
                 QString dir = "./Files/";
                 QDir().mkdir(dir);
-                file.setFileName(dir + QString::fromStdString(packet.getData()));
+                m_file.setFileName(dir + QString::fromStdString(packet.getData()));
 
-                if (!file.open(QFile::WriteOnly | QFile::Truncate))
+                if (!m_file.open(QFile::WriteOnly | QFile::Truncate))
                 {
-                    viewPtr->logIt("Server: Can't open file");
+                    m_viewPtr->logIt("Server: Can't open file");
                     return;
                 }
             }
             break;
         case Packet::Content:
             {
-                if(file.write(QByteArray::fromStdString(packet.getData())) == -1)
+                if(m_file.write(QByteArray::fromStdString(packet.getData())) == -1)
                 {
-                    viewPtr->logIt("Server: Can't write data");
+                    m_viewPtr->logIt("Server: Can't write data");
                     return;
                 }
             }
             break;
         default:
-            viewPtr->logIt("Server: Unknown packet type");
+            m_viewPtr->logIt("Server: Unknown packet type");
             break;
         }
     }
@@ -86,11 +86,11 @@ void Income::onGetTCPStream()
 
 void Income::onDisconnected()
 {
-    viewPtr->logIt("Server: Receiving finished");
-    file.close();
+    m_viewPtr->logIt("Server: Receiving finished");
+    m_file.close();
 
-    viewPtr->logIt("Server: Connection closed: " + to_string(socketDescriptor));
-    socket->deleteLater();
+    m_viewPtr->logIt("Server: Connection closed: " + to_string(m_socketId));
+    m_socket->deleteLater();
 
     exit(0);
 }

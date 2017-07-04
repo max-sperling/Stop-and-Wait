@@ -33,9 +33,9 @@ private:
         std::string value;
     };
 
-    std::fstream *filePtr;
-    States state;
-    std::string tmpName;
-    std::string tmpValue;
-    std::map<std::string, Data*> dataPtr;
+    std::fstream *m_file;
+    States m_state;
+    std::string m_ident;
+    std::string m_value;
+    std::map<std::string, Data*> m_data;
 };

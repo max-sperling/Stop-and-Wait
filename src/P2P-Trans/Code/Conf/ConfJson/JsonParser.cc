@@ -10,59 +10,59 @@ using namespace std;
 
 JsonParser::JsonParser()
 {
-    filePtr = new fstream();
+    m_file = new fstream();
     resetParser();
 }
 
 JsonParser::~JsonParser()
 {
     resetParser();
-    delete filePtr;
+    delete m_file;
 }
 
 void JsonParser::parseFile(string file)
 {
     resetParser();
 
-    filePtr->open(file);
-    if (!filePtr->is_open()) throw exception();
+    m_file->open(file);
+    if (!m_file->is_open()) throw exception();
 
     char c;
-    while (!filePtr->eof())
+    while (!m_file->eof())
     {
-        filePtr->get(c);
+        m_file->get(c);
         changeState(c);
     }
-    filePtr->close();
+    m_file->close();
 }
 
 void JsonParser::getValStr(string name, string &value)
 {
-    auto iter = dataPtr.find(name);
-    if (iter == dataPtr.end()) throw exception();
+    auto iter = m_data.find(name);
+    if (iter == m_data.end()) throw exception();
     if (iter->second->type != Data::Types::text) throw exception();
     value = iter->second->value;
 }
 
 void JsonParser::getValInt(string name, unsigned int &value)
 {
-    auto iter = dataPtr.find(name);
-    if (iter == dataPtr.end()) throw exception();
+    auto iter = m_data.find(name);
+    if (iter == m_data.end()) throw exception();
     if (iter->second->type != Data::Types::number) throw exception();
     value = stoi(iter->second->value);
 }
 
 void JsonParser::resetParser()
 {
-    for (auto it = dataPtr.begin(); it != dataPtr.end(); ++it)
+    for (auto it = m_data.begin(); it != m_data.end(); ++it)
     {
         delete it->second;
     }
-    dataPtr.clear();
+    m_data.clear();
 
-    state = States::start;
-    tmpName = "";
-    tmpValue = "";
+    m_state = States::start;
+    m_ident = "";
+    m_value = "";
 }
 
 void JsonParser::changeState(char input)
@@ -77,25 +77,25 @@ void JsonParser::changeState(char input)
     case ':':
         break;
     case '"':
-        switch (state)
+        switch (m_state)
         {
         case States::start:
-            state = States::name;
+            m_state = States::name;
             break;
         case States::equals:
-            state = States::text;
+            m_state = States::text;
             break;
         case States::name:
-            state = States::equals;
+            m_state = States::equals;
             break;
         case States::text:
             Data* pData = new Data();
             pData->type = Data::Types::text;
-            pData->value = tmpValue;
-            dataPtr.insert(pair<string, Data*>(tmpName, pData));
-            tmpName = "";
-            tmpValue = "";
-            state = States::start;
+            pData->value = m_value;
+            m_data.insert(pair<string, Data*>(m_ident, pData));
+            m_ident = "";
+            m_value = "";
+            m_state = States::start;
             break;
         }
         break;
@@ -109,41 +109,41 @@ void JsonParser::changeState(char input)
     case '7':
     case '8':
     case '9':
-        switch (state)
+        switch (m_state)
         {
         case States::name:
-            tmpName += input;
+            m_ident += input;
             break;
         case  States::equals:
-            state = States::number;
+            m_state = States::number;
         case States::text:
         case States::number:
-            tmpValue += input;
+            m_value += input;
             break;
         }
         break;
     case '}':
     case ',':
-        switch (state)
+        switch (m_state)
         {
         case States::number:
             Data* pData = new Data();
             pData->type = Data::Types::number;
-            pData->value = tmpValue;
-            dataPtr.insert(pair<string, Data*>(tmpName, pData));
-            tmpName = "";
-            tmpValue = "";
-            state = States::start;
+            pData->value = m_value;
+            m_data.insert(pair<string, Data*>(m_ident, pData));
+            m_ident = "";
+            m_value = "";
+            m_state = States::start;
         }
         break;
     default:
-        switch (state)
+        switch (m_state)
         {
         case States::name:
-            tmpName += input;
+            m_ident += input;
             break;
         case States::text:
-            tmpValue += input;
+            m_value += input;
             break;
         }
         break;

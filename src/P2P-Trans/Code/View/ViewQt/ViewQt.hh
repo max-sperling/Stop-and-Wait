@@ -27,14 +27,13 @@ public:
     // ---------------------------------------------
 
 private:
-    ITransPtr transPtr;
+    ITransPtr m_transPtr;
+    std::vector<IViewListener*> *m_listeners;
 
-    QWidget *widWin;
-    QGridLayout *lytWin;
-    QListWidget *lstLog;
-    QPushButton *btnSend;
-
-    std::vector<IViewListener*> *listeners;
+    QWidget *m_widWin;
+    QGridLayout *m_lytWin;
+    QListWidget *m_lstLog;
+    QPushButton *m_btnSend;
 
 private slots:
     void onClickedSend();

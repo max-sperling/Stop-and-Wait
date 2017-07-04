@@ -10,12 +10,12 @@
 // ***** Public ************************************************************************************
 Server::Server(IViewPtr viewPtr)
 {
-    this->viewPtr = viewPtr;
+    m_viewPtr = viewPtr;
 }
 
 bool Server::init(unsigned int port)
 {
-    if(!this->listen(QHostAddress::Any, port))
+    if(!listen(QHostAddress::Any, port))
         return false;
 
     return true;
@@ -23,9 +23,9 @@ bool Server::init(unsigned int port)
 // *************************************************************************************************
 
 // ***** Protected *********************************************************************************
-void Server::incomingConnection(qintptr socketDescriptor)
+void Server::incomingConnection(qintptr socketId)
 {
-    Income *income = new Income(viewPtr, socketDescriptor);
+    Income *income = new Income(m_viewPtr, socketId);
     income->start();
 }
 // *************************************************************************************************

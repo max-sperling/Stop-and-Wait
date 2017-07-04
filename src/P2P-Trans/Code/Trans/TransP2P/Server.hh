@@ -16,8 +16,8 @@ public:
     bool init(unsigned int port);
 
 protected:
-    void incomingConnection(qintptr socketDescriptor);
+    void incomingConnection(qintptr socketId);
 
 private:
-	IViewPtr viewPtr;
+	IViewPtr m_viewPtr;
 };

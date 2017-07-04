@@ -18,8 +18,8 @@ ITransPtr ITrans::create()
 
 bool TransP2P::init(IViewPtr viewPtr, IConfPtr confPtr)
 {
-    this->viewPtr = viewPtr;
-    this->confPtr = confPtr;
+    m_viewPtr = viewPtr;
+    m_confPtr = confPtr;
 
     return true;
 }
@@ -28,29 +28,29 @@ bool TransP2P::exec(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    viewPtr->start(shared_from_this());
-    viewPtr->attach(this);
+    m_viewPtr->start(shared_from_this());
+    m_viewPtr->attach(this);
 
     string addr;
     unsigned int port;
 
-    if(!confPtr->read(addr, port))
+    if(!m_confPtr->read(addr, port))
     {
-        viewPtr->logIt("Error while reading Config");
+        m_viewPtr->logIt("Error while reading Config");
         return false;
     }
 
-    serPtr = new Server(viewPtr);
-    if(!serPtr->init(port))
+    m_serPtr = new Server(m_viewPtr);
+    if(!m_serPtr->init(port))
     {
-        viewPtr->logIt("Error while init Server");
+        m_viewPtr->logIt("Error while init Server");
         return false;
     }
 
-    cliPtr = new Client(viewPtr);
-    if(!cliPtr->init(addr, port))
+    m_cliPtr = new Client(m_viewPtr);
+    if(!m_cliPtr->init(addr, port))
     {
-        viewPtr->logIt("Error while init Client");
+        m_viewPtr->logIt("Error while init Client");
         return false;
     }
 
@@ -64,5 +64,5 @@ bool TransP2P::exec(int argc, char *argv[])
 
 void TransP2P::onClickedSend(std::string str)
 {
-    cliPtr->sendFile(str);
+    m_cliPtr->sendFile(str);
 }

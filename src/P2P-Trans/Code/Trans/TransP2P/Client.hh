@@ -21,10 +21,10 @@ public:
 private:
     bool connectToServer();
 
-    IViewPtr viewPtr;
-    QTcpSocket *socket;
-    QString addr;
-    quint16 port;
+    IViewPtr m_viewPtr;
+    QTcpSocket *m_socket;
+    QString m_addr;
+    quint16 m_port;
 
 private slots:
     void onDisconnected();

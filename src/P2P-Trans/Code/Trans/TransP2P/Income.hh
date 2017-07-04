@@ -16,16 +16,16 @@ class Income : public QThread
     Q_OBJECT
 
 public:
-    Income(IViewPtr viewPtr, qintptr socketDescriptor);
+    Income(IViewPtr viewPtr, qintptr socketId);
 
 protected:
     void run();
 
 private:
-    IViewPtr viewPtr;
-    QTcpSocket *socket;
-    qintptr socketDescriptor;
-    QFile file;
+    IViewPtr m_viewPtr;
+    QTcpSocket *m_socket;
+    qintptr m_socketId;
+    QFile m_file;
 
 signals:
     void error(QTcpSocket::SocketError socketError);

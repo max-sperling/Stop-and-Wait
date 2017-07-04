@@ -13,21 +13,21 @@ using namespace std;
 // ***** Public ************************************************************************************
 Client::Client(IViewPtr viewPtr)
 {
-    socket = new QTcpSocket();
-    this->viewPtr =  viewPtr;
+    m_viewPtr = viewPtr;
+    m_socket = new QTcpSocket();
 }
 
 Client::~Client()
 {
-    socket->deleteLater();
+    m_socket->deleteLater();
 }
 
 bool Client::init(string addr, unsigned int port)
 {
-    this->addr = QString::fromStdString(addr);
-    this->port = port;
+    m_addr = QString::fromStdString(addr);
+    m_port = port;
 
-    connect(socket, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
+    connect(m_socket, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
 
     return true;
 }
@@ -39,17 +39,17 @@ bool Client::sendFile(std::string fileName)
     QFile file(QByteArray::fromStdString(fileName));
     if(!file.open(QIODevice::ReadOnly))
     {
-        viewPtr->logIt("Client: Can't open file");
+        m_viewPtr->logIt("Client: Can't open file");
         return false;
     }
 
-    viewPtr->logIt("Client: Sending started");
+    m_viewPtr->logIt("Client: Sending started");
 
     // Meta
     QFileInfo fileInfo(file);
     string name = fileInfo.fileName().toStdString();
     Packet metaPacket(Packet::Meta, name);
-    socket->write(QByteArray::fromStdString(metaPacket.getRaw()));
+    m_socket->write(QByteArray::fromStdString(metaPacket.getRaw()));
 
     // Content
     QByteArray buffer;
@@ -57,13 +57,13 @@ bool Client::sendFile(std::string fileName)
     {
         string content = buffer.toStdString();
         Packet contentPacket(Packet::Content, content);
-        socket->write(QByteArray::fromStdString(contentPacket.getRaw()));
+        m_socket->write(QByteArray::fromStdString(contentPacket.getRaw()));
     }
 
-    viewPtr->logIt("Client: Sending finished");
+    m_viewPtr->logIt("Client: Sending finished");
     file.close();
 
-    socket->disconnectFromHost();
+    m_socket->disconnectFromHost();
 
     return true;
 }
@@ -72,17 +72,17 @@ bool Client::sendFile(std::string fileName)
 // ***** Private ***********************************************************************************
 bool Client::connectToServer()
 {
-    if(socket->state() == QTcpSocket::ConnectedState)
+    if(m_socket->state() == QTcpSocket::ConnectedState)
         return true;
 
-    socket->connectToHost(addr, port);
+    m_socket->connectToHost(m_addr, m_port);
 
-    if(!socket->waitForConnected(2000))
+    if(!m_socket->waitForConnected(2000))
     {
-        viewPtr->logIt("Client: Can't connect");
+        m_viewPtr->logIt("Client: Can't connect");
         return false;
     }
-    viewPtr->logIt("Client: Connected");
+    m_viewPtr->logIt("Client: Connected");
 
     return true;
 }
@@ -91,6 +91,6 @@ bool Client::connectToServer()
 // ***** Private Slots *****************************************************************************
 void Client::onDisconnected()
 {
-    viewPtr->logIt("Client: Disconnected");
+    m_viewPtr->logIt("Client: Disconnected");
 }
 // *************************************************************************************************

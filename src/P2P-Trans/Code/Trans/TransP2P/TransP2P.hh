@@ -26,9 +26,9 @@ public:
     // ---------------------------------------
 
 private:
-    IViewPtr viewPtr;
-    IConfPtr confPtr;
+    IViewPtr m_viewPtr;
+    IConfPtr m_confPtr;
 
-    Server *serPtr;
-    Client *cliPtr;
+    Server *m_serPtr;
+    Client *m_cliPtr;
 };
