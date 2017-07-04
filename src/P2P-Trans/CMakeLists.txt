@@ -10,7 +10,8 @@ file (GLOB TRANS_SRC
 set (QT_TRANS
     Code/Trans/TransP2P/Server.hh
     Code/Trans/TransP2P/Income.hh
-    Code/Trans/TransP2P/Client.hh)
+    Code/Trans/TransP2P/Client.hh
+    Code/Trans/TransP2P/Outcome.hh)
 qt5_wrap_cpp (QT_TRANS_MOC ${QT_TRANS})
 
 set (VIEW_SRC
@@ -50,4 +51,6 @@ file (COPY Code/Conf/ConfJson/config.json
 
 file (COPY ${QT_PATH}/bin/Qt5Core.dll ${QT_PATH}/bin/Qt5Network.dll
     ${QT_PATH}/bin/Qt5Widgets.dll ${QT_PATH}/bin/Qt5Gui.dll
+    ${QT_PATH}/bin/Qt5Cored.dll ${QT_PATH}/bin/Qt5Guid.dll 
+    ${QT_PATH}/bin/Qt5Networkd.dll ${QT_PATH}/bin/Qt5Widgetsd.dll
     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

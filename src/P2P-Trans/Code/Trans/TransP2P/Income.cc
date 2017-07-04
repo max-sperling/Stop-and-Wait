@@ -14,8 +14,11 @@ Income::Income(IViewPtr viewPtr, qintptr socketId)
 {
     m_viewPtr = viewPtr;
     m_socketId = socketId;
+}
 
-    connect(this, SIGNAL(finished()), this, SLOT(deleteLater()));
+Income::~Income()
+{
+
 }
 // *************************************************************************************************
 
@@ -26,7 +29,7 @@ void Income::run()
 
     if(!m_socket->setSocketDescriptor(m_socketId))
     {
-        emit error(m_socket->error());
+        m_viewPtr->logIt("Server: Can't set socket descriptor");
         return;
     }
 
@@ -44,19 +47,22 @@ void Income::onGetTCPStream()
 {
     while(m_socket->bytesAvailable())
     {
+        while(m_socket->bytesAvailable() < sizeof(int)){}
         QByteArray buffer = m_socket->read(sizeof(int));
         std::array<char, 4> value = {
-            buffer[0], buffer[1], buffer[2], buffer[3]};        
+            buffer[0], buffer[1], buffer[2], buffer[3]};
         unsigned int size = Packet::byteArrayToInt(value);
 
-        Packet packet(size, (m_socket->read(size).toStdString()));
+        while(m_socket->bytesAvailable() < size){}
+        string data = m_socket->read(size).toStdString();
+        Packet packet(size, data);
 
         switch(packet.getType())
         {
         case Packet::Meta:
             {
                 m_viewPtr->logIt("Server: Receiving started");
-                
+
                 QString dir = "./Files/";
                 QDir().mkdir(dir);
                 m_file.setFileName(dir + QString::fromStdString(packet.getData()));

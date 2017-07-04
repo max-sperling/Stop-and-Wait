@@ -9,7 +9,7 @@
 class Packet
 {
 public:
-    static const unsigned int fileSizeMax = 1024*1024;
+    static const unsigned int maxSizeByte = 5000000;
 
     enum Type {
         Meta, Content

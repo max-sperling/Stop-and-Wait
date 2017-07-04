@@ -4,7 +4,6 @@
 
 #include "Server.hh"
 
-#include <QDebug>
 #include "Income.hh"
 
 // ***** Public ************************************************************************************
@@ -26,6 +25,7 @@ bool Server::init(unsigned int port)
 void Server::incomingConnection(qintptr socketId)
 {
     Income *income = new Income(m_viewPtr, socketId);
+    connect(income, SIGNAL(finished()), income, SLOT(deleteLater()));
     income->start();
 }
 // *************************************************************************************************
