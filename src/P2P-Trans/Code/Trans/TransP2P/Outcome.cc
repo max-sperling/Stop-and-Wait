@@ -33,11 +33,7 @@ void Outcome::run()
     connect(m_socket, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
 
     if(!connectToServer()) return;
-    if(!openFile()) return;
     if(!sendFile()) return;
-
-    m_file.close();
-    m_socket->disconnectFromHost();
 
     exec();
 }
@@ -61,20 +57,15 @@ bool Outcome::connectToServer()
     return true;
 }
 
-bool Outcome::openFile()
+bool Outcome::sendFile()
 {
-    m_file.setFileName(QByteArray::fromStdString(m_fileName));
+	m_file.setFileName(QByteArray::fromStdString(m_fileName));
     if(!m_file.open(QIODevice::ReadOnly))
     {
         m_viewPtr->logIt("Client: Can't open file");
         return false;
     }
 
-    return true;
-}
-
-bool Outcome::sendFile()
-{
     m_viewPtr->logIt("Client: Sending started");
 
     // Meta
@@ -82,6 +73,7 @@ bool Outcome::sendFile()
     string name = fileInfo.fileName().toStdString();
     Packet metaPacket(Packet::Meta, name);
     m_socket->write(QByteArray::fromStdString(metaPacket.getRaw()));
+    m_socket->flush();
 
     // Content
     QByteArray buffer;
@@ -90,9 +82,15 @@ bool Outcome::sendFile()
         string content = buffer.toStdString();
         Packet contentPacket(Packet::Content, content);
         m_socket->write(QByteArray::fromStdString(contentPacket.getRaw()));
+        m_socket->flush();
+        QThread::msleep(10);
     }
 
     m_viewPtr->logIt("Client: Sending finished");
+    m_file.close();
+
+    m_socket->disconnectFromHost();
+    m_socket->flush();
 
     return true;
 }

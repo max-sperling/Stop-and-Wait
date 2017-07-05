@@ -54,7 +54,8 @@ void Income::onGetTCPStream()
         unsigned int size = Packet::byteArrayToInt(value);
 
         while(m_socket->bytesAvailable() < size){}
-        string data = m_socket->read(size).toStdString();
+        buffer = m_socket->read(size);
+        string data = buffer.toStdString();
         Packet packet(size, data);
 
         switch(packet.getType())

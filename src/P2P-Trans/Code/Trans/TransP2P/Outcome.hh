@@ -22,7 +22,6 @@ protected:
 
 private:
     bool connectToServer();
-    bool openFile();
     bool sendFile();
 
     IViewPtr m_viewPtr;
