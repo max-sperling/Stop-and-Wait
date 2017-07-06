@@ -1,7 +1,9 @@
 cmake_minimum_required (VERSION 3.5)
 project (P2P-Transfer)
 
+# ***** Setup **************************************************************************************
 find_package (Qt5 COMPONENTS Network Widgets)
+set (QT_PATH ${CMAKE_PREFIX_PATH})
 
 file (GLOB TRANS_SRC
     Code/Trans/TransP2P/*.hh
@@ -31,8 +33,9 @@ set (MAIN_SRC
     Code/Trans/ITrans.hh
     Code/View/IView.hh
     Code/Conf/IConf.hh)
+# **************************************************************************************************
 
-set (QT_PATH ${CMAKE_PREFIX_PATH})
+# ***** Building ***********************************************************************************
 add_library (Trans SHARED ${TRANS_SRC} ${QT_TRANS_MOC})
 include_directories (Trans ${Qt5Network_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS})
 target_link_libraries (Trans ${Qt5Network_LIBRARIES} ${Qt5Widgets_LIBRARIES})
@@ -47,10 +50,28 @@ add_executable (${PROJECT_NAME} ${MAIN_SRC})
 target_link_libraries (${PROJECT_NAME} Trans View Conf)
 
 file (COPY Code/Conf/ConfJson/config.json
-    DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+    DESTINATION ${CMAKE_BINARY_DIR})
+# **************************************************************************************************
 
-file (COPY ${QT_PATH}/bin/Qt5Core.dll ${QT_PATH}/bin/Qt5Network.dll
-    ${QT_PATH}/bin/Qt5Widgets.dll ${QT_PATH}/bin/Qt5Gui.dll
-    ${QT_PATH}/bin/Qt5Cored.dll ${QT_PATH}/bin/Qt5Guid.dll 
-    ${QT_PATH}/bin/Qt5Networkd.dll ${QT_PATH}/bin/Qt5Widgetsd.dll
-    DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+# ***** Post-Build *********************************************************************************
+set (QT_LIBS_VIEW Qt5Widgets Qt5Gui)
+set (QT_LIBS_TRANS Qt5Core Qt5Network)
+
+foreach (FILE ${QT_LIBS_VIEW})
+add_custom_command(TARGET View
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    $<$<CONFIG:Debug>:${QT_PATH}/bin/${FILE}d.dll> 
+    $<$<CONFIG:Release>:${QT_PATH}/bin/${FILE}.dll> 
+    $<TARGET_FILE_DIR:View>)
+endforeach (FILE)
+
+foreach (FILE ${QT_LIBS_TRANS})
+add_custom_command(TARGET Trans
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    $<$<CONFIG:Debug>:${QT_PATH}/bin/${FILE}d.dll> 
+    $<$<CONFIG:Release>:${QT_PATH}/bin/${FILE}.dll> 
+    $<TARGET_FILE_DIR:Trans>)
+endforeach (FILE)
+# **************************************************************************************************
