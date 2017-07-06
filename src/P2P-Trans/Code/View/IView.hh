@@ -15,7 +15,7 @@ public:
     static IViewPtr create();
     virtual ~IView(){}
 
-    virtual bool start(ITransPtr transPtr) = 0;
+    virtual bool start() = 0;
     virtual void logIt(std::string str) = 0;
     virtual bool attach(IViewListener *lis) = 0;
     virtual bool detach(IViewListener *lis) = 0;

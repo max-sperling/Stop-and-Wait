@@ -16,6 +16,16 @@ ITransPtr ITrans::create()
     return ITransPtr(new TransP2P());
 }
 
+TransP2P::TransP2P()
+{
+
+}
+
+TransP2P::~TransP2P()
+{
+
+}
+
 bool TransP2P::init(IViewPtr viewPtr, IConfPtr confPtr)
 {
     m_viewPtr = viewPtr;
@@ -28,7 +38,7 @@ bool TransP2P::exec(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    m_viewPtr->start(shared_from_this());
+    m_viewPtr->start();
     m_viewPtr->attach(this);
 
     string addr;
@@ -55,9 +65,11 @@ bool TransP2P::exec(int argc, char *argv[])
     }
 
     app.exec();
-    
-    // delete cliPtr;
-    // delete serPtr;
+
+    m_viewPtr->detach(this);
+
+    delete m_cliPtr;
+    delete m_serPtr;
 
     return true;
 }

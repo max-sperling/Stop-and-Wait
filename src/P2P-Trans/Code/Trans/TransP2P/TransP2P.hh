@@ -13,8 +13,8 @@ class TransP2P : public ITrans, public IViewListener,
     public std::enable_shared_from_this<ITrans>
 {
 public:
-    TransP2P(){}
-    ~TransP2P(){}
+    TransP2P();
+    ~TransP2P();
 
     // --- ITrans ----------------------------
     virtual bool init(IViewPtr viewPtr, IConfPtr confPtr);

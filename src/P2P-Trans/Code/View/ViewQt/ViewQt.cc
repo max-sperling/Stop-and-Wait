@@ -24,14 +24,15 @@ ViewQt::ViewQt()
 
 ViewQt::~ViewQt()
 {
+    delete m_listeners;
+    delete m_btnSend;
     delete m_lstLog;
     delete m_lytWin;
+    delete m_widWin;
 }
 
-bool ViewQt::start(ITransPtr transPtr)
+bool ViewQt::start()
 {
-    m_transPtr = transPtr;
-
     m_widWin = new QWidget();
     m_lytWin = new QGridLayout();
     m_lstLog = new QListWidget();

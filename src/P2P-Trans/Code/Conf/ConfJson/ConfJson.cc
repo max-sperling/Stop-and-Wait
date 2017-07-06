@@ -14,6 +14,16 @@ IConfPtr IConf::create()
     return IConfPtr(new ConfJson());
 }
 
+ConfJson::ConfJson()
+{
+
+}
+
+ConfJson::~ConfJson()
+{
+    
+}
+
 bool ConfJson::read(string &addr, unsigned int &port)
 {
     JsonParser parser;

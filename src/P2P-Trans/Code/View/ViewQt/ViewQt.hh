@@ -20,14 +20,14 @@ public:
     ~ViewQt();
 
     // --- IView -----------------------------------
-    virtual bool start(ITransPtr transPtr);
+    virtual bool start();
     virtual void logIt(std::string str);
     virtual bool attach(IViewListener *lis);
     virtual bool detach(IViewListener *lis);
     // ---------------------------------------------
 
 private:
-    ITransPtr m_transPtr;
+    std::weak_ptr<ITrans> m_transPtr;
     std::vector<IViewListener*> *m_listeners;
 
     QWidget *m_widWin;
