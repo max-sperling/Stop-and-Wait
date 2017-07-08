@@ -14,6 +14,8 @@ Income::Income(IViewPtr viewPtr, qintptr socketId)
 {
     m_viewPtr = viewPtr;
     m_socketId = socketId;
+    m_size = 0;
+    moveToThread(this);
 }
 
 Income::~Income()
@@ -47,16 +49,26 @@ void Income::onGetTCPStream()
 {
     while(m_socket->bytesAvailable())
     {
-        while(m_socket->bytesAvailable() < sizeof(int)){}
-        QByteArray buffer = m_socket->read(sizeof(int));
-        std::array<char, 4> value = {
-            buffer[0], buffer[1], buffer[2], buffer[3]};
-        unsigned int size = Packet::byteArrayToInt(value);
+        if(m_size == 0)
+        {
+            if(m_socket->bytesAvailable() < sizeof(int))
+                return;
+            QByteArray buffer = m_socket->read(sizeof(int));
+            std::array<char, 4> size = {
+                buffer[0], buffer[1], buffer[2], buffer[3]};
+            m_size = Packet::byteArrayToInt(size);
+        }
 
-        while(m_socket->bytesAvailable() < size){}
-        buffer = m_socket->read(size);
+        QByteArray dataAry = m_socket->readAll();
+        m_data.append(dataAry);
+
+        if(m_data.size() < m_size)
+            return;
+
+        QByteArray buffer = m_data.left(m_size);
         string data = buffer.toStdString();
-        Packet packet(size, data);
+        m_data.remove(0, m_size);
+        Packet packet(m_size, data);
 
         switch(packet.getType())
         {
@@ -88,6 +100,8 @@ void Income::onGetTCPStream()
             m_viewPtr->logIt("Server: Unknown packet type");
             break;
         }
+
+        m_size = 0;
     }
 }
 

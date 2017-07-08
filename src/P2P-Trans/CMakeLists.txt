@@ -54,24 +54,22 @@ file (COPY Code/Conf/ConfJson/config.json
 # **************************************************************************************************
 
 # ***** Post-Build *********************************************************************************
-set (QT_LIBS_VIEW Qt5Widgets Qt5Gui)
-set (QT_LIBS_TRANS Qt5Core Qt5Network)
+set (QT_LIBS
+	${QT_PATH}/bin/Qt5Widgets ${QT_PATH}/bin/Qt5Gui
+	${QT_PATH}/bin/Qt5Core ${QT_PATH}/bin/Qt5Network)
 
-foreach (FILE ${QT_LIBS_VIEW})
-add_custom_command(TARGET View
-    POST_BUILD
+foreach (FILE ${QT_LIBS})
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    $<$<CONFIG:Debug>:${QT_PATH}/bin/${FILE}d.dll> 
-    $<$<CONFIG:Release>:${QT_PATH}/bin/${FILE}.dll> 
-    $<TARGET_FILE_DIR:View>)
+    $<$<CONFIG:Debug>:${FILE}d.dll>
+    $<$<CONFIG:Release>:${FILE}.dll>
+    $<TARGET_FILE_DIR:${PROJECT_NAME}>)
 endforeach (FILE)
 
-foreach (FILE ${QT_LIBS_TRANS})
-add_custom_command(TARGET Trans
-    POST_BUILD
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    $<$<CONFIG:Debug>:${QT_PATH}/bin/${FILE}d.dll> 
-    $<$<CONFIG:Release>:${QT_PATH}/bin/${FILE}.dll> 
-    $<TARGET_FILE_DIR:Trans>)
-endforeach (FILE)
+    $<$<CONFIG:Debug>:${QT_PATH}/plugins/platforms/qwindowsd.dll>
+    $<$<CONFIG:Release>:${QT_PATH}/plugins/platforms/qwindows.dll>
+    $<$<CONFIG:Debug>:${CMAKE_BINARY_DIR}/platforms/qwindowsd.dll>
+    $<$<CONFIG:Release>:${CMAKE_BINARY_DIR}/platforms/qwindows.dll>)
 # **************************************************************************************************

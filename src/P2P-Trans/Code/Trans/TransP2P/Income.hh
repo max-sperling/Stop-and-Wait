@@ -29,6 +29,9 @@ private:
     qintptr m_socketId;
     QFile m_file;
 
+    unsigned int m_size;
+    QByteArray m_data;
+
 private slots:
     void onGetTCPStream();
     void onDisconnected();
