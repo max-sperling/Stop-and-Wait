@@ -15,7 +15,6 @@ Income::Income(IViewPtr viewPtr, qintptr socketId)
     m_viewPtr = viewPtr;
     m_socketId = socketId;
     m_size = 0;
-    moveToThread(this);
 }
 
 Income::~Income()
@@ -59,15 +58,11 @@ void Income::onGetTCPStream()
             m_size = Packet::byteArrayToInt(size);
         }
 
-        QByteArray dataAry = m_socket->readAll();
-        m_data.append(dataAry);
-
-        if(m_data.size() < m_size)
+        if(m_socket->bytesAvailable() < m_size)
             return;
 
-        QByteArray buffer = m_data.left(m_size);
-        string data = buffer.toStdString();
-        m_data.remove(0, m_size);
+        m_data = m_socket->read(m_size);
+        string data = m_data.toStdString();
         Packet packet(m_size, data);
 
         switch(packet.getType())
@@ -102,6 +97,7 @@ void Income::onGetTCPStream()
         }
 
         m_size = 0;
+        m_data.clear();
     }
 }
 

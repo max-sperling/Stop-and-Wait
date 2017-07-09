@@ -17,7 +17,6 @@ Outcome::Outcome(IViewPtr viewPtr, string addr, unsigned int port, string fileNa
     m_addr = addr;
     m_port = port;
     m_fileName = fileName;
-    moveToThread(this);
 }
 
 Outcome::~Outcome()
@@ -84,7 +83,7 @@ bool Outcome::sendFile()
         Packet contentPacket(Packet::Content, content);
         m_socket->write(QByteArray::fromStdString(contentPacket.getRaw()));
         m_socket->flush();
-        QThread::msleep(25);
+        QThread::msleep(20);
     }
 
     m_viewPtr->logIt("Client: Sending finished");

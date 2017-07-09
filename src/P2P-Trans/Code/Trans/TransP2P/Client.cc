@@ -16,7 +16,7 @@ Client::Client(IViewPtr viewPtr)
 
 Client::~Client()
 {
-    
+
 }
 
 bool Client::init(string addr, unsigned int port)
@@ -31,6 +31,7 @@ bool Client::sendFile(std::string fileName)
 {
     Outcome *outcome = new Outcome(m_viewPtr, m_addr, m_port, fileName);
     connect(outcome, SIGNAL(finished()), outcome, SLOT(deleteLater()));
+    //moveToThread(outcome);
     outcome->start();
 
     return true;

@@ -26,6 +26,7 @@ void Server::incomingConnection(qintptr socketId)
 {
     Income *income = new Income(m_viewPtr, socketId);
     connect(income, SIGNAL(finished()), income, SLOT(deleteLater()));
+    //moveToThread(income);
     income->start();
 }
 // *************************************************************************************************
