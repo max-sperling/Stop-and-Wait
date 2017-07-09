@@ -74,6 +74,7 @@ bool Outcome::sendFile()
     Packet metaPacket(Packet::Meta, name);
     m_socket->write(QByteArray::fromStdString(metaPacket.getRaw()));
     m_socket->flush();
+    m_socket->waitForBytesWritten(-1);
 
     // Content
     QByteArray buffer;
@@ -83,7 +84,7 @@ bool Outcome::sendFile()
         Packet contentPacket(Packet::Content, content);
         m_socket->write(QByteArray::fromStdString(contentPacket.getRaw()));
         m_socket->flush();
-        QThread::msleep(20);
+        m_socket->waitForBytesWritten(-1);
     }
 
     m_viewPtr->logIt("Client: Sending finished");
