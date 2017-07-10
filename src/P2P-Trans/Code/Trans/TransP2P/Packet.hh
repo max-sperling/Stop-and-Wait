@@ -9,7 +9,9 @@
 class Packet
 {
 public:
-    static const unsigned int maxSizeByte = 50000000;
+    static const unsigned int s_maxSize = 50000000;
+    static const unsigned int s_lenSize = sizeof(int);
+    static const unsigned int s_lenType = sizeof(char);
 
     enum Type {
         Meta, Content

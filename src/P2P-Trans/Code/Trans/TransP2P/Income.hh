@@ -28,9 +28,11 @@ private:
     QTcpSocket *m_socket;
     qintptr m_socketId;
     QFile m_file;
+    std::string m_fileName;
+    std::string m_logIdent;
 
-    unsigned int m_size;
-    QByteArray m_data;
+    unsigned int m_blockSize;
+    QByteArray m_blockData;
 
 private slots:
     void onGetTCPStream();

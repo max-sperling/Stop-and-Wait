@@ -17,6 +17,7 @@ Outcome::Outcome(IViewPtr viewPtr, string addr, unsigned int port, string fileNa
     m_addr = addr;
     m_port = port;
     m_fileName = fileName;
+    m_logIdent = "[Client]";
 }
 
 Outcome::~Outcome()
@@ -49,10 +50,10 @@ bool Outcome::connectToServer()
 
     if(!m_socket->waitForConnected(2000))
     {
-        m_viewPtr->logIt("Client: Can't connect");
+        m_viewPtr->logIt(m_logIdent + " Can't connect");
         return false;
     }
-    m_viewPtr->logIt("Client: Connected");
+    m_viewPtr->logIt(m_logIdent + " Connected");
 
     return true;
 }
@@ -62,11 +63,11 @@ bool Outcome::sendFile()
 	m_file.setFileName(QByteArray::fromStdString(m_fileName));
     if(!m_file.open(QIODevice::ReadOnly))
     {
-        m_viewPtr->logIt("Client: Can't open file");
+        m_viewPtr->logIt(m_logIdent + " Can't open file");
         return false;
     }
 
-    m_viewPtr->logIt("Client: Sending started");
+    m_viewPtr->logIt(m_logIdent + " Started sending: " + m_fileName);
 
     // Meta
     QFileInfo fileInfo(m_file);
@@ -78,7 +79,7 @@ bool Outcome::sendFile()
 
     // Content
     QByteArray buffer;
-    while(!(buffer = m_file.read(Packet::maxSizeByte)).isEmpty())
+    while(!(buffer = m_file.read(Packet::s_maxSize)).isEmpty())
     {
         string content = buffer.toStdString();
         Packet contentPacket(Packet::Content, content);
@@ -87,7 +88,7 @@ bool Outcome::sendFile()
         m_socket->waitForBytesWritten(-1);
     }
 
-    m_viewPtr->logIt("Client: Sending finished");
+    m_viewPtr->logIt(m_logIdent + " Finished sending: " + m_fileName);
     m_file.close();
 
     m_socket->disconnectFromHost();
@@ -100,7 +101,7 @@ bool Outcome::sendFile()
 // ***** Private Slots *****************************************************************************
 void Outcome::onDisconnected()
 {
-    m_viewPtr->logIt("Client: Disconnected");
+    m_viewPtr->logIt(m_logIdent + " Disconnected");
     m_socket->deleteLater();
 
     exit(0);

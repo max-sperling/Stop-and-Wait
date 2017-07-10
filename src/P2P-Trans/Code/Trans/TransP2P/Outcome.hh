@@ -28,6 +28,7 @@ private:
     std::string m_addr;
     unsigned int m_port;
     std::string m_fileName;
+    std::string m_logIdent;
 
     QTcpSocket *m_socket;
     QFile m_file;

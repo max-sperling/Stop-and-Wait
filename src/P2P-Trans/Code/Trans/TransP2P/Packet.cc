@@ -30,19 +30,19 @@ Packet::Packet(Type type, string data)
 {
     m_type = type;
     m_data = data;
-    m_size = sizeof(char) + data.length();
+    m_size = s_lenType + data.length();
 }
 
 Packet::Packet(unsigned int size, string raw)
 {
     m_size = size;
-    m_type = (Type)stoi(raw.substr(0, sizeof(char)));
-    m_data = raw.substr(sizeof(char), raw.length()-sizeof(char));
+    m_type = (Type)stoi(raw.substr(0, s_lenType));
+    m_data = raw.substr(s_lenType, raw.length()-s_lenType);
 }
 
 string Packet::getRaw()
 {
-    array<char, 4> size = intToBytes(m_size);
+    array<char, s_lenSize> size = intToBytes(m_size);
     return string(begin(size), end(size)) + to_string(m_type) + m_data;
 }
 
