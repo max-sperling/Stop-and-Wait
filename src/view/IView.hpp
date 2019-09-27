@@ -7,7 +7,7 @@
 
 #include <string>
 #include <deque>
-#include "../Trans/ITransFwd.hpp"
+#include "../trans/ITransFwd.hpp"
 
 class IView
 {

@@ -52,7 +52,7 @@ add_library (Conf SHARED ${CONF_SRC})
 add_executable (${PROJECT_NAME} ${MAIN_SRC})
 target_link_libraries (${PROJECT_NAME} Trans View Conf)
 
-file (COPY src/res/conf/config.json DESTINATION ${CMAKE_BINARY_DIR})
+file (COPY res/conf/config.json DESTINATION ${CMAKE_BINARY_DIR})
 # **************************************************************************************************
 
 # ***** Post-Build *********************************************************************************

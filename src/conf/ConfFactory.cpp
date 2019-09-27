@@ -12,7 +12,7 @@ IConfPtr ConfFactory::create(ConfType type)
     IConfPtr confPtr;
     switch(type)
     {
-    case ConfType::P2P:
+    case ConfType::Json:
         confPtr = make_shared<ConfJson>();
         break;
     }

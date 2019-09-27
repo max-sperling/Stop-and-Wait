@@ -5,7 +5,7 @@
 
 #include <QString>
 #include <QTcpServer>
-#include "../../View/IView.hpp"
+#include "../../view/IView.hpp"
 
 class Server : public QTcpServer
 {

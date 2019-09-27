@@ -4,7 +4,7 @@
 /************************/
 
 #include "../ITrans.hpp"
-#include "../../View/IView.hpp"
+#include "../../view/IView.hpp"
 
 class Server;
 class Client;

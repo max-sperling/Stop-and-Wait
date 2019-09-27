@@ -6,7 +6,7 @@
 #include <QObject>
 #include <QString>
 #include <string>
-#include "../../View/IView.hpp"
+#include "../../view/IView.hpp"
 
 class Client : public QObject
 {

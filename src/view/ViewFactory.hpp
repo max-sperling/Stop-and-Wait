@@ -7,7 +7,7 @@
 
 enum ViewType
 {
-    Qt
+    Qute
 };
 
 class ViewFactory

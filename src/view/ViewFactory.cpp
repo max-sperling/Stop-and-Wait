@@ -12,7 +12,7 @@ IViewPtr ViewFactory::create(ViewType type)
     IViewPtr viewPtr;
     switch(type)
     {
-    case ViewType::Qt:
+    case ViewType::Qute:
         viewPtr = make_shared<ViewQt>();
         break;
     }

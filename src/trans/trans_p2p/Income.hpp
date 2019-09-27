@@ -7,7 +7,7 @@
 #include <QHostAddress>
 #include <QTcpSocket>
 #include <QFile>
-#include "../../View/IView.hpp"
+#include "../../view/IView.hpp"
 
 class Server;
 

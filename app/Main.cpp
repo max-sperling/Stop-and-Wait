@@ -2,13 +2,13 @@
 /* Author: Max Sperling */
 /************************/
 
-#include "./view/ViewFactory.hpp"
-#include "./conf/ConfFactory.hpp"
-#include "./trans/TransFactory.hpp"
+#include "../src/view/ViewFactory.hpp"
+#include "../src/conf/ConfFactory.hpp"
+#include "../src/trans/TransFactory.hpp"
 
 int main(int argc, char *argv[])
 {
-    IViewPtr viewPtr = ViewFactory::create(ViewType::Qt);
+    IViewPtr viewPtr = ViewFactory::create(ViewType::Qute);
     IConfPtr confPtr = ConfFactory::create(ConfType::Json);
     ITransPtr transPtr = TransFactory::create(TransType::P2P);
 
