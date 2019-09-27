@@ -1,7 +1,7 @@
 # P2P-Transfer
 
 ## Requirements
-C++-Compiler <br>
+C++11 <br>
 CMake <br>
 Qt <br>
 
