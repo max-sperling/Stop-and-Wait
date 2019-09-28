@@ -54,24 +54,3 @@ target_link_libraries (${PROJECT_NAME} Trans View Conf)
 
 file (COPY res/conf/config.json DESTINATION ${CMAKE_BINARY_DIR})
 # **************************************************************************************************
-
-# ***** Post-Build *********************************************************************************
-set (QT_LIBS
-    ${QT_PATH}/bin/Qt5Widgets ${QT_PATH}/bin/Qt5Gui
-    ${QT_PATH}/bin/Qt5Core ${QT_PATH}/bin/Qt5Network)
-
-foreach (FILE ${QT_LIBS})
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    $<$<CONFIG:Debug>:${FILE}d.dll>
-    $<$<CONFIG:Release>:${FILE}.dll>
-    $<TARGET_FILE_DIR:${PROJECT_NAME}>)
-endforeach (FILE)
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    $<$<CONFIG:Debug>:${QT_PATH}/plugins/platforms/qwindowsd.dll>
-    $<$<CONFIG:Release>:${QT_PATH}/plugins/platforms/qwindows.dll>
-    $<$<CONFIG:Debug>:${CMAKE_BINARY_DIR}/platforms/qwindowsd.dll>
-    $<$<CONFIG:Release>:${CMAKE_BINARY_DIR}/platforms/qwindows.dll>)
-# **************************************************************************************************
